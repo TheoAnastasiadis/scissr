@@ -1,0 +1,4 @@
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multpart=0.0.6
+Geohash=1.0
