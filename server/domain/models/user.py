@@ -2,7 +2,7 @@ from typing import Optional
 from typing_extensions import Annotated
 from datetime import datetime
 from .photo import Photo
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, BeforeValidator
 
 
 class Contact(BaseModel):
@@ -19,16 +19,15 @@ class Contact(BaseModel):
 
 
 class User(BaseModel):
-    id: Annotated[str, Field(alias="_id")]
+    id: Annotated[str, Field(alias="_id"), BeforeValidator(str)]
     username: Annotated[str, Field()]
     age: Annotated[int, Field(ge=18, le=100)]
     online_status: Annotated[bool, Field(default_factory=lambda: False)]
     active_mtr: Annotated[Optional[float], Field(ge=0, le=1)]
     kinky_mtr: Annotated[Optional[float], Field(ge=0, le=1)]
-    location: Annotated[str, Field()]
+    location: Annotated[tuple[float, float], Field()]
     vibes: Annotated[list[str], Field(default_factory=lambda: [])]
     photos: Annotated[list[Photo], Field(default_factory=lambda: [])]
-    contacts: Annotated[list[Contact], Field(default_factory=lambda: [])]
     blocked: Annotated[list[str], Field(default_factory=lambda: [])]
 
     class ConfigDict:
@@ -44,7 +43,6 @@ class User(BaseModel):
                 "location": "#23456",
                 "vibes": ["cats"],
                 "photos": [Photo.ConfigDict.json_schema_extra["example"]],
-                "contacts": [],
                 "blocked": [],
             }
         }
