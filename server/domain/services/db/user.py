@@ -2,16 +2,26 @@ from server.domain.models.user import User
 
 
 class UserDB:
-    def findOne(id: str) -> User:
+    def findOne(self, id: str) -> User:
         raise NotImplementedError("UserDB.findOne()")
 
     def findMany(
-        *, limit: int = 20, skip: int = 0, filters: dict = {}, exclude_list=[]
+        self,
+        skip: int,
+        limit: int,
+        location: tuple[float, float],
+        distance: int,
+        active_mtr: dict,
+        kinky_mtr: dict,
+        exclude_from_results: list[str],
+        excluded_from: list[str],
+        only_active: bool,
+        vibes: list[str],
     ) -> list[User]:
         raise NotImplementedError("UserDB.findMany()")
 
-    def delete(id: str):
+    def delete(self, id: str):
         raise NotImplementedError("UserDB.delete()")
 
-    def update(user: User):
+    def update(self, user: User, location: tuple = None):
         raise NotImplementedError("UserDB.update()")
