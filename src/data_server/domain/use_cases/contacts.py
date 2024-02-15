@@ -1,6 +1,6 @@
 from src.common.models.contact import Contact
 from src.common.models.user import User
-from data_server.domain.services.db.auth import AuthDB
+from src.data_server.domain.services.auth import AuthDB
 from data_server.domain.services.db.contacts import ContactsDB
 from fastapi import HTTPException
 

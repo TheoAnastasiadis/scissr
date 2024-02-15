@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from src.common.models.message import Message
 from src.common.queues.message import MessageQueue
-from data_server.domain.services.db.auth import AuthDB
+from src.data_server.domain.services.auth import AuthDB
 from data_server.domain.services.db.contacts import ContactsDB
 from data_server.domain.services.db.message import MessageDB
 from data_server.domain.services.db.user import UserDB

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Request, UploadFile
 from src.common.models.photo import Photo
-from data_server.domain.services.db.auth import AuthDB
+from src.data_server.domain.services.auth import AuthDB
 from data_server.domain.services.db.message import MessageDB
 from data_server.domain.services.db.user import UserDB
 from data_server.domain.services.storage.storage import Storage
 
-from data_server.domain.services.use_cases.photos import PhotoUseCases
+from data_server.domain.use_cases.photos import PhotoUseCases
 
 
 class PhotosRouter:

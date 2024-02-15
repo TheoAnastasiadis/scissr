@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request
 from src.common.models.user import User
-from data_server.domain.services.db.auth import AuthDB
+from src.data_server.domain.services.auth import AuthDB
 from data_server.domain.services.db.contacts import ContactsDB
 from data_server.domain.services.db.user import UserDB
-from data_server.domain.services.use_cases.user import UserUseCases, Filters
+from data_server.domain.use_cases.user import UserUseCases, Filters
 
 
 class UserRouter:
