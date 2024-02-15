@@ -1,19 +1,17 @@
-from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request
 from src.common.models.message import Message
 from src.common.queues.message import MessageQueue
 from data_server.domain.services.db.auth import AuthDB
 from data_server.domain.services.db.contacts import ContactsDB
 from data_server.domain.services.db.message import MessageDB
 from data_server.domain.services.db.user import UserDB
-from data_server.domain.services.use_cases.messages import MessageUseCases
-from .connection_manager import ConnectionManager
+from data_server.domain.use_cases.messages import MessageUseCases
 
 
 class MessagesRouter:
 
     tags = ["messages"]
     message_use_cases: MessageUseCases
-    manager: ConnectionManager
 
     def __init__(
         self,
@@ -26,7 +24,6 @@ class MessagesRouter:
         self.message_use_cases = MessageUseCases(
             auth_db, message_db, message_queue, user_db, contacts_db
         )
-        self.manager = ConnectionManager()
 
     def create_router(self) -> APIRouter:
         router = APIRouter(tags=self.tags)
@@ -50,29 +47,5 @@ class MessagesRouter:
             self.message_use_cases.send_message(
                 request.user, to_id, body.photo_id, body.text
             )
-
-        @router.websocket("/messages/{from_id}/{to_id}")
-        async def subscribe_to_messages(
-            websocket: WebSocket,
-            from_id: str,
-            to_id: str,
-        ):
-            # once, on opening the websoccket
-            await self.manager.register(from_id, to_id, websocket)
-
-            try:
-                while True:
-                    messages: list[Message] = (
-                        self.message_use_cases.get_live_messages()
-                    )
-                    for message in messages:
-                        self.manager.notify(
-                            message.sender,
-                            message.reciever,
-                            message,
-                            websocket,
-                        )
-            except WebSocketDisconnect:
-                self.manager.delete(websocket)
 
         return router

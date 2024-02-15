@@ -1,3 +1,4 @@
+from bson import ObjectId
 from fastapi import WebSocket
 
 from src.common.models.message import Message
@@ -5,7 +6,9 @@ from src.common.models.message import Message
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: dict[WebSocket] = {}
+        self.active_connections: dict[tuple[ObjectId, ObjectId], WebSocket] = (
+            {}
+        )
 
     async def register(self, from_id: str, to_id: str, websocket: WebSocket):
         await websocket.accept()
