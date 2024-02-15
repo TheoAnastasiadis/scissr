@@ -8,12 +8,22 @@ from bson.objectid import ObjectId
 class MongoUserDB(UserDB):
     _DB = "main"
     _COLLECTION = "users"
+    _TEST = False
 
-    def __init__(self, client: MongoClient):
+    def __init__(self, client: MongoClient, test: bool = False):
         super().__init__()
         self.client = client
+        if test:
+            self._TEST = True
+            self._DB = "test"
         self.db = self.client[self._DB]
         self.collection = self.db[self._COLLECTION]
+        self.collection.create_index({"location": "2dsphere"})
+
+    def empty_db_for_tests(self):
+        if not self._TEST:
+            raise ValueError("Cannot empty database if not testing")
+        self.collection.delete_many({})
 
     def findOne(self, id: str) -> User:
         print(id)
@@ -47,7 +57,7 @@ class MongoUserDB(UserDB):
                 }
             },
             "_id": {"$nin": [ObjectId(id) for id in exclude_from_results]},
-            "blocked": {"$nin": ObjectId(excluded_from)},
+            "blocked": {"$nin": [ObjectId(excluded_from)]},
         }
         if only_active:
             query["online_status"] = {"$eq": True}
@@ -67,7 +77,7 @@ class MongoUserDB(UserDB):
             )
 
         if len(vibes) > 0:
-            query["vibes"] = {"vibes": {"$in": vibes}}
+            query["$or"] = [{"vibes": vibe} for vibe in vibes]
 
         users = self.collection.find(query).skip(skip).limit(limit)
         return [User(**user) for user in users]
