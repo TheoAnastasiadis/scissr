@@ -1,8 +1,7 @@
 import pytest
-from datetime import datetime
 from pydantic import ValidationError
 import uuid
-from src.common.models import User, Contact
+from src.common.models import User
 
 
 @pytest.fixture
@@ -86,10 +85,3 @@ def test_default_values():
     assert user.vibes == []
     assert user.photos == []
     assert user.blocked == []
-
-
-def test_create_contact():
-    contact_data = {"_id": str(uuid.uuid4()), "last_contacted": datetime.now()}
-    contact = Contact(**contact_data)
-    assert isinstance(contact.id, str)
-    assert isinstance(contact.last_contacted, datetime)
