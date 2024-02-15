@@ -1,9 +1,9 @@
 from typing import Annotated
-from pydantic import BaseModel, Field, AfterValidator
+from pydantic import BaseModel, Field, BeforeValidator
 
 
 class Photo(BaseModel):
-    id: Annotated[str, Field(alias="_id"), AfterValidator(str)]
+    id: Annotated[str, Field(alias="_id"), BeforeValidator(str)]
     url: Annotated[str, Field()]
     public: Annotated[bool, Field(default_factory=lambda: False)]
 
