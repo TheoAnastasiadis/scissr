@@ -1,18 +1,17 @@
 from bson import ObjectId
 import pytest
-from mongomock import MongoClient
+from pymongo import MongoClient
 from src.common.models.user import User
+from src.common.config import config
 from src.data_server.impl.services.db.mongo_user_db import MongoUserDB
 
 
 @pytest.fixture
-def mongo_client():
-    return MongoClient()
-
-
-@pytest.fixture
-def mongo_user_db(mongo_client):
-    return MongoUserDB(mongo_client)
+def mongo_user_db():
+    mongo_client = MongoClient(config["MONGO_URI"])
+    db = MongoUserDB(mongo_client, test=True)
+    db.empty_db_for_tests()
+    return db
 
 
 def test_findOne_existing_user(mongo_user_db):
@@ -40,11 +39,7 @@ def test_findOne_nonexistent_user(mongo_user_db):
     assert user is None
 
 
-@pytest.mark.skip(
-    reason="""NotImplementedError: '$near' is a valid operation but
-    it is not supported by Mongomock yet."""
-)
-def test_findMany(mongo_user_db):
+def test_findMany_w_pagination(mongo_user_db):
     # Insert test data
     users_data = [
         {
@@ -56,14 +51,14 @@ def test_findMany(mongo_user_db):
         },
         {
             "username": "user2",
-            "location": (1, 1),
+            "location": (0, 0),
             "age": 35,
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
         {
             "username": "user3",
-            "location": (2, 2),
+            "location": (0, 0),
             "age": 35,
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
@@ -73,19 +68,254 @@ def test_findMany(mongo_user_db):
 
     # Test findMany method
     users = mongo_user_db.findMany(
-        0,
-        2,
-        (0, 0),
-        100,
-        {0, "GE"},
-        {0, "GE"},
-        [str(ObjectId())],
-        str(ObjectId),
-        True,
-        ["cats"],
+        skip=0,
+        limit=2,
+        location=(0, 0),
+        distance=100,
+        active_mtr={"value": 0, "operation": "GE"},
+        kinky_mtr={"value": 0, "operation": "GE"},
+        exclude_from_results=[],
+        excluded_from=None,
+        only_active=False,
+        vibes=[],
     )
 
     assert len(users) == 2
+
+
+def test_findMany_w_blocked(mongo_user_db):
+    # Insert test data
+    users_data = [
+        {
+            "username": "user1",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+        {
+            "username": "user2",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+        {
+            "username": "user3",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+    ]
+    inserted_ids = mongo_user_db.collection.insert_many(
+        users_data
+    ).inserted_ids
+
+    # the third user has blocked the first
+    mongo_user_db.collection.update_one(
+        {"_id": inserted_ids[2]}, {"$set": {"blocked": [inserted_ids[0]]}}
+    )
+
+    # Test findMany method
+    users = mongo_user_db.findMany(
+        skip=0,
+        limit=20,
+        location=(0, 0),
+        distance=100,
+        active_mtr={"value": 0, "operation": "GE"},
+        kinky_mtr={"value": 0, "operation": "GE"},
+        exclude_from_results=[inserted_ids[1]],
+        excluded_from=str(inserted_ids[0]),
+        only_active=False,
+        vibes=[],
+    )
+
+    assert len(users) == 1
+
+
+def test_findMany_w_location(mongo_user_db):
+    # Insert test data
+    users_data = [
+        {
+            "username": "user1",
+            "location": (37.97945, 23.71622),  # Athens
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+        {
+            "username": "user2",
+            "location": (40.64361, 22.93086),  # Thessaloniki
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+        {
+            "username": "user3",
+            "location": (52.37403, 4.88969),  # Amsterdam
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+    ]
+
+    mongo_user_db.collection.insert_many(users_data)
+
+    # Test findMany method
+    users = mongo_user_db.findMany(
+        skip=0,
+        limit=20,
+        location=(37.97945, 23.71622),  # Athens
+        distance=500,  # 500kms
+        active_mtr={"value": 0, "operation": "GE"},
+        kinky_mtr={"value": 0, "operation": "GE"},
+        exclude_from_results=[],
+        excluded_from=None,
+        only_active=False,
+        vibes=[],
+    )
+
+    assert len(users) == 2
+
+
+def test_findMany_w_vibes(mongo_user_db):
+    # Insert test data
+    users_data = [
+        {
+            "username": "user1",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+            "vibes": ["cats", "shibari"],
+        },
+        {
+            "username": "user2",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+            "vibes": ["shibari", "hentai"],
+        },
+        {
+            "username": "user3",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+            "vibes": ["cats"],
+        },
+    ]
+
+    mongo_user_db.collection.insert_many(users_data)
+
+    # Test findMany method
+    users = mongo_user_db.findMany(
+        skip=0,
+        limit=20,
+        location=(0, 0),
+        distance=100,
+        active_mtr={"value": 0, "operation": "GE"},
+        kinky_mtr={"value": 0, "operation": "GE"},
+        exclude_from_results=[],
+        excluded_from=None,
+        only_active=False,
+        vibes=["shibari"],
+    )
+
+    assert len(users) == 2
+
+
+def test_findMany_w_mtr(mongo_user_db):
+    # Insert test data
+    users_data = [
+        {
+            "username": "user1",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.3,
+            "active_mtr": 0.6,
+        },
+        {
+            "username": "user2",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.6,
+            "active_mtr": 0.2,
+        },
+        {
+            "username": "user3",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.6,
+            "active_mtr": 0.6,
+        },
+    ]
+
+    mongo_user_db.collection.insert_many(users_data)
+
+    # Test findMany method
+    users = mongo_user_db.findMany(
+        skip=0,
+        limit=20,
+        location=(0, 0),
+        distance=100,
+        active_mtr={"value": 0.5, "operation": "GE"},
+        kinky_mtr={"value": 0.5, "operation": "GE"},
+        exclude_from_results=[],
+        excluded_from=None,
+        only_active=False,
+        vibes=[],
+    )
+
+    assert len(users) == 1
+
+
+def test_findMany_w_status(mongo_user_db):
+    # Insert test data
+    users_data = [
+        {
+            "username": "user1",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+        {
+            "username": "user2",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+        },
+        {
+            "username": "user3",
+            "location": (0, 0),
+            "age": 35,
+            "kinky_mtr": 0.5,
+            "active_mtr": 0.5,
+            "online_status": True,
+        },
+    ]
+
+    mongo_user_db.collection.insert_many(users_data)
+
+    # Test findMany method
+    users = mongo_user_db.findMany(
+        skip=0,
+        limit=20,
+        location=(0, 0),
+        distance=100,
+        active_mtr={"value": 0.5, "operation": "GE"},
+        kinky_mtr={"value": 0.5, "operation": "GE"},
+        exclude_from_results=[],
+        excluded_from=None,
+        only_active=True,
+        vibes=[],
+    )
+
+    assert len(users) == 1
 
 
 def test_delete(mongo_user_db):
