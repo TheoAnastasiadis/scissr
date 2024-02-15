@@ -1,4 +1,5 @@
-from .user import User, Contact
+from .user import User
+from .contact import Contact
 from .photo import Photo
 from .message import Message
 
