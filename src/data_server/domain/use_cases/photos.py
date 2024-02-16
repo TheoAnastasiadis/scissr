@@ -2,9 +2,9 @@ from bson import ObjectId
 from src.common.models.photo import Photo
 from src.common.models.user import User
 from src.data_server.domain.services.auth import AuthDB
-from data_server.domain.services.db.message import MessageDB
-from data_server.domain.services.db.user import UserDB
-from data_server.domain.services.storage.storage import Storage
+from src.data_server.domain.services.db.message import MessageDB
+from src.data_server.domain.services.db.user import UserDB
+from src.data_server.domain.services.storage.storage import Storage
 from fastapi import HTTPException
 from pydantic import validate_call
 
@@ -56,21 +56,19 @@ class PhotoUseCases:
 
         message = self.message_db.findOne(message_id)
         if not is_admin and caller.id not in [
-            message.sender.id,
-            message.reciever.id,
+            message.sender,
+            message.reciever,
         ]:
             raise HTTPException(
                 status_code=403, detail="You cannot view this resource"
             )
 
-        if "photo" not in message:
+        if not message.photo_id:
             raise HTTPException(
                 status_code=404, detail="Message does not contain image"
             )
 
-        return self.storage_service.download(
-            message.sender.id, message.photo.id
-        )
+        return self.storage_service.download(message.sender, message.photo_id)
 
     @validate_call
     def delete_photo(self, caller: User, user_id: str, photo_id: str):

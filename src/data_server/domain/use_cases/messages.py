@@ -1,10 +1,9 @@
-from src.common.models.message import Message
 from src.common.models.user import User
 from src.common.queues.message import MessageQueue
 from src.data_server.domain.services.auth import AuthDB
-from data_server.domain.services.db.contacts import ContactsDB
-from data_server.domain.services.db.message import MessageDB
-from data_server.domain.services.db.user import UserDB
+from src.data_server.domain.services.db.contacts import ContactsDB
+from src.data_server.domain.services.db.message import MessageDB
+from src.data_server.domain.services.db.user import UserDB
 from pydantic import validate_call
 from fastapi import HTTPException
 
@@ -32,14 +31,14 @@ class MessageUseCases:
         self.contacts_db = contacts_db
 
     @validate_call
-    def get_persisted_messages(
+    def get_messages(
         self,
         caller: User,
         parties: tuple[str, str],
         skip: int = 0,
         limit: int = 20,
     ):
-        is_admin = self.auth_db.user_is_admin()
+        is_admin = self.auth_db.user_is_admin(caller.id)
 
         if not is_admin and caller.id not in parties:
             raise HTTPException(
@@ -47,10 +46,6 @@ class MessageUseCases:
             )
 
         return self.messages_db.findMany(parties, skip, limit)
-
-    @validate_call
-    def get_live_messages(self) -> list[Message]:
-        return self.message_queue.consume()
 
     @validate_call
     def send_message(
