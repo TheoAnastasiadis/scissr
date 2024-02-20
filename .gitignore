@@ -35,3 +35,4 @@ htmlcov
 
 # environment
 .env
+.vscode
