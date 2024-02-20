@@ -30,7 +30,12 @@ class PhotoUseCases:
 
     @validate_call
     def upload_photo(
-        self, caller: User, user_id: str, file: bytes, public: bool = False
+        self,
+        caller: User,
+        user_id: str,
+        photo_id: str,
+        file: bytes,
+        public: bool = False,
     ) -> Photo:
         is_admin = self.auth_db.user_is_admin(caller.id)
 
@@ -40,9 +45,9 @@ class PhotoUseCases:
             )
 
         # business.validate_upload(user_id)
-        url = self.storage_service.upload(file, user_id, public)
+        photo_id = str(ObjectId())
+        url = self.storage_service.upload(file, user_id, photo_id, public)
         # business.assess_upload(url)
-        photo_id = ObjectId()
         if not public:
             url = f"/:private:/{user_id}/{photo_id}"
 
