@@ -1,6 +1,8 @@
 class Storage:
 
-    def upload(self, file: bytes, user_id: str, public: bool = False) -> str:
+    def upload(
+        self, file: bytes, user_id: str, public: bool = False
+    ) -> str | None:
         raise NotImplementedError("Storage.upload()")
 
     def download(self, user_id, photo_id) -> bytes:
