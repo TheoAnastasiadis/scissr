@@ -39,6 +39,7 @@ class MockUserDB(UserDB):
             _id=id,
             username=id,
             age=21,
+            email="example@email.com",
             online_status=True,
             location=(0, 0),
             kinky_mtr=0.5,
@@ -64,6 +65,7 @@ def test_get_messages_admin():
         _id="admin",
         username="admin",
         age=30,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         active_mtr=0.5,
@@ -86,6 +88,7 @@ def test_get_messages_user():
         _id="user123",
         username="user",
         age=25,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         active_mtr=0.5,
@@ -108,6 +111,7 @@ def test_get_messages_unauthorized():
         _id="other_user",
         username="other",
         age=28,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         active_mtr=0.5,
@@ -131,15 +135,16 @@ def test_send_message_blocked():
         _id="caller123",
         username="caller",
         age=25,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         active_mtr=0.5,
         kinky_mtr=0.5,
         vibes=["confident"],
-        blocked=["reciever123"],
+        blocked=["rec1234"],
     )
     with pytest.raises(HTTPException) as exc_info:
-        message_use_cases.send_message(caller, "reciever123", "Hello!")
+        message_use_cases.send_message(caller, "rec1234", "Hello!")
     assert exc_info.value.status_code == 403
 
 
@@ -155,6 +160,7 @@ def test_send_message_empty_input():
         _id="caller123",
         username="caller",
         age=25,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         active_mtr=0.5,
@@ -162,7 +168,7 @@ def test_send_message_empty_input():
         vibes=["confident"],
     )
     with pytest.raises(HTTPException) as exc_info:
-        message_use_cases.send_message(caller, "reciever123")
+        message_use_cases.send_message(caller, "rec1234")
     assert exc_info.value.status_code == 400
 
 
@@ -178,13 +184,14 @@ def test_send_message_text():
         _id="caller123",
         username="caller",
         age=25,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         active_mtr=0.5,
         kinky_mtr=0.5,
         vibes=["confident"],
     )
-    message_use_cases.send_message(caller, "reciever123", "Hello!")
+    message_use_cases.send_message(caller, "rec1234", "Hello!")
 
 
 def test_send_message_photo():
@@ -199,10 +206,11 @@ def test_send_message_photo():
         _id="caller123",
         username="caller",
         age=25,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         active_mtr=0.5,
         kinky_mtr=0.5,
         vibes=["confident"],
     )
-    message_use_cases.send_message(caller, "reciever123", photo_id="photo123")
+    message_use_cases.send_message(caller, "rec1234", photo_id="photo123")

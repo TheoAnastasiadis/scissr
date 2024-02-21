@@ -25,6 +25,7 @@ class MockUserDB(UserDB):
             _id=id,
             username="user",
             age=25,
+            email="example@email.com",
             online_status=True,
             vibes=["outgoing"],
             active_mtr=0.5,
@@ -49,7 +50,9 @@ class MockMessageDB(MessageDB):
 
 
 class MockStorage(Storage):
-    def upload(self, file: bytes, user_id: str, public: bool = False) -> str:
+    def upload(
+        self, file: bytes, user_id: str, photo_id: str, public: bool = False
+    ) -> str:
         return "http://example.com/photo123.jpg"
 
     def download(self, user_id, photo_id) -> bytes:
@@ -67,13 +70,16 @@ def test_upload_photo_admin():
         _id="admin",
         username="admin",
         age=30,
+        email="example@email.com",
         online_status=True,
         vibes=["friendly"],
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
     )
-    photo_use_cases.upload_photo(caller, "user123", b"mock_photo_data")
+    photo_use_cases.upload_photo(
+        caller, "user123", "photo_id", b"mock_photo_data"
+    )
 
 
 def test_upload_photo_user():
@@ -84,13 +90,16 @@ def test_upload_photo_user():
         _id="user123",
         username="user",
         age=25,
+        email="example@email.com",
         online_status=True,
         vibes=["outgoing"],
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
     )
-    photo_use_cases.upload_photo(caller, "user123", b"mock_photo_data")
+    photo_use_cases.upload_photo(
+        caller, "user123", "photo_id", b"mock_photo_data"
+    )
 
 
 def test_upload_photo_unauthorized():
@@ -101,6 +110,7 @@ def test_upload_photo_unauthorized():
         _id="other_user",
         username="other",
         age=28,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         vibes=["adventurous"],
@@ -108,7 +118,9 @@ def test_upload_photo_unauthorized():
         kinky_mtr=0.5,
     )
     with pytest.raises(HTTPException) as exc_info:
-        photo_use_cases.upload_photo(caller, "user123", b"mock_photo_data")
+        photo_use_cases.upload_photo(
+            caller, "user123", "photo_id", b"mock_photo_data"
+        )
     assert exc_info.value.status_code == 403
 
 
@@ -120,6 +132,7 @@ def test_download_message_photo_admin():
         _id="admin",
         username="admin",
         age=30,
+        email="example@email.com",
         online_status=True,
         vibes=["friendly"],
         active_mtr=0.5,
@@ -137,6 +150,7 @@ def test_download_message_photo_sender():
         _id=sender_id,
         username="sender",
         age=25,
+        email="example@email.com",
         online_status=True,
         location=(0, 0),
         vibes=["active"],
@@ -154,6 +168,7 @@ def test_download_message_photo_reciever():
         _id=reciever_id,
         username="reciever",
         age=27,
+        email="example@email.com",
         online_status=True,
         vibes=["relaxed"],
         active_mtr=0.5,
@@ -171,6 +186,7 @@ def test_download_message_photo_unauthorized():
         _id="other_user",
         username="other",
         age=28,
+        email="example@email.com",
         online_status=True,
         vibes=["adventurous"],
         active_mtr=0.5,
@@ -190,6 +206,7 @@ def test_delete_photo_admin():
         _id="admin",
         username="admin",
         age=30,
+        email="example@email.com",
         online_status=True,
         vibes=["friendly"],
         active_mtr=0.5,
@@ -207,6 +224,7 @@ def test_delete_photo_user():
         _id="user123",
         username="user",
         age=25,
+        email="example@email.com",
         online_status=True,
         vibes=["outgoing"],
         active_mtr=0.5,
@@ -224,6 +242,7 @@ def test_delete_photo_unauthorized():
         _id="other_user",
         username="other",
         age=28,
+        email="example@email.com",
         online_status=True,
         vibes=["adventurous"],
         active_mtr=0.5,
