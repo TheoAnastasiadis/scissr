@@ -1,12 +1,12 @@
-from src.common.models.user import User
+from src.common.models.user import PronounsEnum, User
+from src.data_server.domain.services.cache.user_cache import UserCache
+from src.data_server.domain.services.db.contacts import ContactsDB
 from ..services.db import UserDB, AuthDB
 from fastapi import HTTPException
 from pydantic import Field, validate_call, BaseModel
 from typing_extensions import Annotated
 from typing import NamedTuple, Optional
 from enum import Enum
-
-from ..services.db.contacts import ContactsDB
 
 
 class Operations(str, Enum):
@@ -47,10 +47,11 @@ class Filters(BaseModel):
 
 
 class UpdateUserBody(BaseModel):
-    username: Annotated[str, Field(kw_only=True)]
-    age: Annotated[int, Field(kw_only=True)]
-    kinky_mtr: Annotated[float, Field(ge=0, le=1, kw_only=True)]
-    active_mtr: Annotated[float, Field(ge=0, le=1, kw_only=True)]
+    username: Annotated[Optional[str], Field(kw_only=True)]
+    age: Annotated[Optional[int], Field(kw_only=True)]
+    pronouns: Annotated[Optional[PronounsEnum], Field(kw_only=True)]
+    kinky_mtr: Annotated[Optional[float], Field(ge=0, le=1, kw_only=True)]
+    active_mtr: Annotated[Optional[float], Field(ge=0, le=1, kw_only=True)]
     vibes: Annotated[list[str], Field(kw_only=True)]
     location: Annotated[
         Optional[LocationTuple], Field(kw_only=True, default=None)
@@ -60,13 +61,20 @@ class UpdateUserBody(BaseModel):
 class UserUseCases:
 
     user_db: UserDB
+    user_cache: UserCache
     auth_db: AuthDB
     contacts_db: ContactsDB
 
     def __init__(
-        self, /, user_db: UserDB, auth_db: AuthDB, contacts_db: ContactsDB
+        self,
+        /,
+        user_db: UserDB,
+        user_cache: UserCache,
+        auth_db: AuthDB,
+        contacts_db: ContactsDB,
     ):
         self.user_db = user_db
+        self.user_cache = user_cache
         self.auth_db = auth_db
         self.contacts_db = contacts_db
 
@@ -96,7 +104,8 @@ class UserUseCases:
 
         if not user_is_admin and caller.id != user_id:
             user.blocked = []
-            user.location = ""
+            user.location = None
+            user.email = None
             user.photos = [photo for photo in user.photos if photo.public]
 
         return user
@@ -134,6 +143,9 @@ class UserUseCases:
 
         if "vibes" in body:
             user.vibes = body["vibes"]
+
+        if "pronouns" in body:
+            user.pronouns = body["pronouns"]
 
         return (
             self.user_db.update(user, body["location"])
@@ -173,25 +185,39 @@ class UserUseCases:
     ) -> list[User]:
 
         is_admin = self.auth_db.user_is_admin(caller)
-
-        users = self.user_db.findMany(
-            skip,
-            limit,
-            location=filters.location,
-            distance=filters.distance,
-            active_mtr=filters.active_mtr["value"],
-            active_mtr_op=filters.active_mtr["operation"],
-            kinky_mtr=filters.kinky_mtr["value"],
-            kinky_mtr_op=filters.kinky_mtr["operation"],
-            exclude_from_results=caller.blocked if not is_admin else [],
-            excluded_from=caller.id if not is_admin else None,
-            only_acitve=filters.only_active,
-            vibes=filters.vibes,
-        )
+        filters_dict = filters.model_dump(exclude=["location", "distance"])
+        location_hash = ""
+        users = []
+        # check if results are already in cache
+        # (only when filters.only_active == False)
+        if (
+            self.user_cache.cache_has(filters_dict, location_hash)
+            and not filters.only_active
+        ):
+            users = self.user_cache.cache_get(filters_dict, location_hash)
+        # otherwise fetch from db
+        # and append to cache
+        else:
+            users = self.user_db.findMany(
+                skip,
+                limit,
+                location=filters.location,
+                distance=filters.distance,
+                active_mtr=filters.active_mtr["value"],
+                active_mtr_op=filters.active_mtr["operation"],
+                kinky_mtr=filters.kinky_mtr["value"],
+                kinky_mtr_op=filters.kinky_mtr["operation"],
+                exclude_from_results=caller.blocked if not is_admin else [],
+                excluded_from=caller.id if not is_admin else None,
+                only_acitve=filters.only_active,
+                vibes=filters.vibes,
+            )
+            self.user_cache.cache_set(filters_dict, users, location_hash)
 
         def delete_uneccesary(u: User):
             u.blocked = []
-            u.location = ""
+            u.location = None
+            u.email = None
             u.photos = [photo for photo in u.photos if photo.public]
 
         if not is_admin:

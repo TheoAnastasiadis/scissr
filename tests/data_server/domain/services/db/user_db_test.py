@@ -42,6 +42,7 @@ def test_update_not_implemented():
             User(
                 _id="123",
                 username="example",
+                email="example@email.com",
                 age=23,
                 active_mtr=0.5,
                 kinky_mtr=0.5,

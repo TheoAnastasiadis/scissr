@@ -9,6 +9,8 @@ def sample_user_data():
     return {
         "_id": str(uuid.uuid4()),
         "username": "testuser",
+        "email": "test@email.com",
+        "pronouns": "she/her",
         "age": 25,
         "online_status": True,
         "active_mtr": 0.8,
@@ -40,6 +42,7 @@ def test_invalid_age():
         User(
             _id=str(uuid.uuid4()),
             age=15,
+            email="test@example.com",
             username="testuser",
             location=(0, 0),
         )
@@ -51,6 +54,7 @@ def test_invalid_active_mtr():
             _id=str(uuid.uuid4()),
             age=25,
             username="testuser",
+            email="test@example.com",
             active_mtr=1.5,
             location=(0, 0),
         )
@@ -62,6 +66,7 @@ def test_invalid_kinky_mtr():
             _id=str(uuid.uuid4()),
             age=25,
             username="testuser",
+            email="test@example.com",
             kinky_mtr=-0.1,
             location=(0, 0),
         )
@@ -69,7 +74,12 @@ def test_invalid_kinky_mtr():
 
 def test_empty_location():
     with pytest.raises(ValidationError):
-        User(_id=str(uuid.uuid4()), age=25, username="testuser")
+        User(
+            _id=str(uuid.uuid4()),
+            age=25,
+            email="test@example.com",
+            username="testuser",
+        )
 
 
 def test_default_values():
@@ -77,6 +87,7 @@ def test_default_values():
         _id=str(uuid.uuid4()),
         age=25,
         username="testuser",
+        email="test@example.com",
         location=(0, 0),
         active_mtr=0.5,
         kinky_mtr=0.5,

@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from src.common.models import User
+from src.data_server.domain.services.cache.user_cache import UserCache
 from src.data_server.domain.services.db import UserDB, AuthDB, ContactsDB
 from src.data_server.domain.use_cases.user import (
     UserUseCases,
@@ -16,10 +17,14 @@ from fastapi import HTTPException
 @pytest.fixture
 def user_usecases():
     user_db = MagicMock(spec=UserDB)
+    user_cache = MagicMock(spec=UserCache)
     auth_db = MagicMock(spec=AuthDB)
     contacts_db = MagicMock(spec=ContactsDB)
     return UserUseCases(
-        user_db=user_db, auth_db=auth_db, contacts_db=contacts_db
+        user_db=user_db,
+        user_cache=user_cache,
+        auth_db=auth_db,
+        contacts_db=contacts_db,
     )
 
 
@@ -32,6 +37,7 @@ def test_get_user(user_usecases):
         _id="456",
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -40,6 +46,7 @@ def test_get_user(user_usecases):
         _id=user_id,
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -95,6 +102,7 @@ def test_update_user(user_usecases):
         _id="456",
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -104,6 +112,7 @@ def test_update_user(user_usecases):
         _id="345",
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -114,8 +123,9 @@ def test_update_user(user_usecases):
 
     # Test successful update
     update_body = UpdateUserBody(
-        username="newusername",
+        username="newusernam",
         age=30,
+        email="example@email.com",
         kinky_mtr=0.4,
         active_mtr=0.7,
         vibes=["happy", "excited"],
@@ -170,6 +180,7 @@ def test_block_user(user_usecases):
         _id="456",
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -190,6 +201,7 @@ def test_unblock_user(user_usecases):
         _id="456",
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -212,6 +224,7 @@ def test_delete_user(user_usecases):
         _id="456",
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -220,6 +233,7 @@ def test_delete_user(user_usecases):
         _id=user_id,
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -246,11 +260,13 @@ def test_delete_user(user_usecases):
 def test_get_users(user_usecases):
     user_db = user_usecases.user_db
     auth_db = user_usecases.auth_db
+    user_cache = user_usecases.user_cache
 
     caller = User(
         _id="456",
         username="test_user",
         age=21,
+        email="example@email.com",
         active_mtr=0.5,
         kinky_mtr=0.5,
         location=(0, 0),
@@ -267,6 +283,7 @@ def test_get_users(user_usecases):
 
     # Test successful get users
     auth_db.user_is_admin.return_value = False
+    user_cache.cache_has.return_value = False
     user_usecases.get_users(caller, filters)
     user_db.findMany.assert_called_with(
         0,
