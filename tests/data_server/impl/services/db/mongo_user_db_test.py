@@ -20,6 +20,7 @@ def test_findOne_existing_user(mongo_user_db):
         "username": "test_user",
         "location": (0, 0),
         "age": 35,
+        "email": "email@example.com",
         "kinky_mtr": 0.5,
         "active_mtr": 0.5,
     }
@@ -46,6 +47,7 @@ def test_findMany_w_pagination(mongo_user_db):
             "username": "user1",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -53,6 +55,7 @@ def test_findMany_w_pagination(mongo_user_db):
             "username": "user2",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -60,6 +63,7 @@ def test_findMany_w_pagination(mongo_user_db):
             "username": "user3",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -90,6 +94,7 @@ def test_findMany_w_blocked(mongo_user_db):
             "username": "user1",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -97,6 +102,7 @@ def test_findMany_w_blocked(mongo_user_db):
             "username": "user2",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -104,6 +110,7 @@ def test_findMany_w_blocked(mongo_user_db):
             "username": "user3",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -141,6 +148,7 @@ def test_findMany_w_location(mongo_user_db):
             "username": "user1",
             "location": (37.97945, 23.71622),  # Athens
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -148,6 +156,7 @@ def test_findMany_w_location(mongo_user_db):
             "username": "user2",
             "location": (40.64361, 22.93086),  # Thessaloniki
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -155,6 +164,7 @@ def test_findMany_w_location(mongo_user_db):
             "username": "user3",
             "location": (52.37403, 4.88969),  # Amsterdam
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -186,6 +196,7 @@ def test_findMany_w_vibes(mongo_user_db):
             "username": "user1",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
             "vibes": ["cats", "shibari"],
@@ -194,6 +205,7 @@ def test_findMany_w_vibes(mongo_user_db):
             "username": "user2",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
             "vibes": ["shibari", "hentai"],
@@ -202,6 +214,7 @@ def test_findMany_w_vibes(mongo_user_db):
             "username": "user3",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
             "vibes": ["cats"],
@@ -234,6 +247,7 @@ def test_findMany_w_mtr(mongo_user_db):
             "username": "user1",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.3,
             "active_mtr": 0.6,
         },
@@ -241,6 +255,7 @@ def test_findMany_w_mtr(mongo_user_db):
             "username": "user2",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.6,
             "active_mtr": 0.2,
         },
@@ -248,6 +263,7 @@ def test_findMany_w_mtr(mongo_user_db):
             "username": "user3",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.6,
             "active_mtr": 0.6,
         },
@@ -279,6 +295,7 @@ def test_findMany_w_status(mongo_user_db):
             "username": "user1",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -286,6 +303,7 @@ def test_findMany_w_status(mongo_user_db):
             "username": "user2",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
         },
@@ -293,6 +311,7 @@ def test_findMany_w_status(mongo_user_db):
             "username": "user3",
             "location": (0, 0),
             "age": 35,
+            "email": "email@example.com",
             "kinky_mtr": 0.5,
             "active_mtr": 0.5,
             "online_status": True,
@@ -324,6 +343,7 @@ def test_delete(mongo_user_db):
         "username": "user_to_be_deleted",
         "location": (2, 2),
         "age": 35,
+        "email": "email@example.com",
         "kinky_mtr": 0.5,
         "active_mtr": 0.5,
     }
@@ -349,15 +369,16 @@ def test_update(mongo_user_db):
         "active_mtr": 0.5,
         "location": (0, 0),
         "age": 35,
+        "email": "email@example.com",
     }
     # Create a new user object to update
     inserted_id = mongo_user_db.collection.insert_one(user_data).inserted_id
     user = mongo_user_db.findOne(str(inserted_id))
 
-    user.username = "updated_user"
+    user.username = "upd_user"
     updated_user = mongo_user_db.update(user)
     # Check if the user has been updated in the database
-    assert updated_user.username == "updated_user"
+    assert updated_user.username == "upd_user"
 
 
 if __name__ == "__main__":
