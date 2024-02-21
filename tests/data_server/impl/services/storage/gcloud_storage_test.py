@@ -11,7 +11,8 @@ from fastapi import HTTPException
 def gcstorage():
     # Mocking Google Cloud Storage client and bucket
     client = Client()
-    storage = GoogleCloudStorage(client)
+    storage = GoogleCloudStorage(client, test=True)
+    storage.empty_bucket_for_testing()
     return storage
 
 
