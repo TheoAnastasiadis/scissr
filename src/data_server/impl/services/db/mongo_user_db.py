@@ -25,9 +25,16 @@ class MongoUserDB(UserDB):
             raise ValueError("Cannot empty database if not testing")
         self.collection.delete_many({})
 
-    def findOne(self, id: str) -> User:
-        print(id)
-        user = self.collection.find_one(ObjectId(id))
+    def findOne(self, by_id: str = None, by_email: str = None) -> User:
+        if not by_id and not by_email:
+            raise TypeError(
+                "at least one of `by_id` or `by_email` args must be provided"
+            )
+        user = (
+            self.collection.find_one(ObjectId(by_id))
+            if by_id
+            else self.collection.find_one({"email": by_email})
+        )
         if user:
             return User(**user)
         else:
@@ -96,3 +103,6 @@ class MongoUserDB(UserDB):
                 return_document=ReturnDocument.AFTER,
             )
         )
+
+    def insert(self, user: User):
+        self.collection.insert_one(user)

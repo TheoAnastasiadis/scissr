@@ -2,7 +2,7 @@ from src.common.models.user import User
 
 
 class UserDB:
-    def findOne(self, id: str) -> User:
+    def findOne(self, by_id: str = None, by_email: str = None) -> User:
         raise NotImplementedError("UserDB.findOne()")
 
     def findMany(
@@ -23,5 +23,8 @@ class UserDB:
     def delete(self, id: str):
         raise NotImplementedError("UserDB.delete()")
 
-    def update(self, user: User, location: tuple = None):
+    def update(self, user: User):
         raise NotImplementedError("UserDB.update()")
+
+    def insert(self, user: User):
+        raise NotImplementedError("UserDB.insert()")
