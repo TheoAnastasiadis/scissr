@@ -1,5 +1,5 @@
 from .user import UserDB
-from ..auth import AuthDB
+from ..auth.auth_serivce import AuthService
 from .contacts import ContactsDB
 
-__all__ = ["UserDB", "AuthDB", "ContactsDB"]
+__all__ = ["UserDB", "AuthService", "ContactsDB"]
