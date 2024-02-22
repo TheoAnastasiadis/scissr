@@ -1,6 +1,7 @@
+from unittest.mock import Mock
 from src.common.models.user import User
 from src.common.queues.message import MessageQueue
-from src.data_server.domain.services.auth import AuthDB
+from src.data_server.domain.services.auth.auth_serivce import APICaller
 from src.data_server.domain.services.db.contacts import ContactsDB
 from src.data_server.domain.services.db.message import MessageDB
 from src.data_server.domain.services.db.user import UserDB
@@ -8,131 +9,46 @@ from src.data_server.domain.use_cases.messages import MessageUseCases
 import pytest
 from fastapi import HTTPException
 
-
-class MockAuthDB(AuthDB):
-    def user_is_admin(self, user_id) -> bool:
-        return user_id == "admin"
-
-
-class MockMessageDB(MessageDB):
-    def findMany(self, parties: tuple[str, str], skip: int, limit: int):
-        return []
-
-    def insert(
-        self,
-        sender_id: str,
-        reciever_id: str,
-        text: str = None,
-        photo_id: str = None,
-    ):
-        return {"id": "message123"}
+ex_caller = APICaller(data_id="id", email="", roles=[])
+ex_user = User(
+    _id="example",
+    username="example",
+    age=30,
+    email="example@email.com",
+    online_status=True,
+    location=(0, 0),
+    active_mtr=0.5,
+    kinky_mtr=0.5,
+    vibes=["friendly"],
+)
 
 
-class MockMessageQueue(MessageQueue):
-    def announce(self, caller_id: str, reciever_id: str, message: dict):
-        pass
-
-
-class MockUserDB(UserDB):
-    def findOne(self, id: str):
-        return User(
-            _id=id,
-            username=id,
-            age=21,
-            email="example@email.com",
-            online_status=True,
-            location=(0, 0),
-            kinky_mtr=0.5,
-            active_mtr=0.5,
-            vibes=[],
-        )
-
-
-class MockContactsDB(ContactsDB):
-    def update(self, parties: tuple[str, str], last_message: str):
-        pass
-
-
-def test_get_messages_admin():
-    message_use_cases = MessageUseCases(
-        MockAuthDB(),
-        MockMessageDB(),
-        MockMessageQueue(),
-        MockUserDB(),
-        MockContactsDB(),
+@pytest.fixture
+def message_use_cases():
+    mock_message_db = Mock(spec=MessageDB)
+    mock_queue = Mock(spec=MessageQueue)
+    mock_user_db = Mock(spec=UserDB)
+    mock_contacts_db = Mock(spec=ContactsDB)
+    return MessageUseCases(
+        mock_message_db,
+        mock_queue,
+        mock_user_db,
+        mock_contacts_db,
     )
-    caller = User(
-        _id="admin",
-        username="admin",
-        age=30,
-        email="example@email.com",
-        online_status=True,
-        location=(0, 0),
-        active_mtr=0.5,
-        kinky_mtr=0.5,
-        vibes=["friendly"],
-    )
-    messages = message_use_cases.get_messages(caller, ("user123", "user456"))
-    assert messages == []
 
 
-def test_get_messages_user():
-    message_use_cases = MessageUseCases(
-        MockAuthDB(),
-        MockMessageDB(),
-        MockMessageQueue(),
-        MockUserDB(),
-        MockContactsDB(),
-    )
-    caller = User(
-        _id="user123",
-        username="user",
-        age=25,
-        email="example@email.com",
-        online_status=True,
-        location=(0, 0),
-        active_mtr=0.5,
-        kinky_mtr=0.5,
-        vibes=["outgoing"],
-    )
-    messages = message_use_cases.get_messages(caller, ("user123", "user456"))
-    assert messages == []
+def test_get_messages(message_use_cases):
+    message_db = message_use_cases.messages_db
+
+    # test authorized
+    message_use_cases.get_messages(ex_caller, (ex_caller.data_id, "other_id"))
+    message_db.findMany.assert_called_once()
 
 
-def test_get_messages_unauthorized():
-    message_use_cases = MessageUseCases(
-        MockAuthDB(),
-        MockMessageDB(),
-        MockMessageQueue(),
-        MockUserDB(),
-        MockContactsDB(),
-    )
-    caller = User(
-        _id="other_user",
-        username="other",
-        age=28,
-        email="example@email.com",
-        online_status=True,
-        location=(0, 0),
-        active_mtr=0.5,
-        kinky_mtr=0.5,
-        vibes=["adventurous"],
-    )
-    with pytest.raises(HTTPException) as exc_info:
-        message_use_cases.get_messages(caller, ("user123", "user456"))
-    assert exc_info.value.status_code == 403
-
-
-def test_send_message_blocked():
-    message_use_cases = MessageUseCases(
-        MockAuthDB(),
-        MockMessageDB(),
-        MockMessageQueue(),
-        MockUserDB(),
-        MockContactsDB(),
-    )
-    caller = User(
-        _id="caller123",
+def test_get_messages_unauthorized(message_use_cases):
+    user_db = message_use_cases.user_db
+    reciever = User(
+        _id="rec1234",
         username="caller",
         age=25,
         email="example@email.com",
@@ -141,23 +57,19 @@ def test_send_message_blocked():
         active_mtr=0.5,
         kinky_mtr=0.5,
         vibes=["confident"],
-        blocked=["rec1234"],
+        blocked=[],
     )
+    user_db.findOne.return_value = reciever
+    # test unauthorized
     with pytest.raises(HTTPException) as exc_info:
-        message_use_cases.send_message(caller, "rec1234", "Hello!")
+        message_use_cases.get_messages(ex_caller, ("random_id", "other_id"))
     assert exc_info.value.status_code == 403
 
 
-def test_send_message_empty_input():
-    message_use_cases = MessageUseCases(
-        MockAuthDB(),
-        MockMessageDB(),
-        MockMessageQueue(),
-        MockUserDB(),
-        MockContactsDB(),
-    )
-    caller = User(
-        _id="caller123",
+def test_send_message_blocked(message_use_cases):
+    user_db = message_use_cases.user_db
+    reciever = User(
+        _id="rec1234",
         username="caller",
         age=25,
         email="example@email.com",
@@ -166,51 +78,43 @@ def test_send_message_empty_input():
         active_mtr=0.5,
         kinky_mtr=0.5,
         vibes=["confident"],
+        blocked=[ex_caller.data_id],
     )
+
+    user_db.findOne.return_value = reciever
     with pytest.raises(HTTPException) as exc_info:
-        message_use_cases.send_message(caller, "rec1234")
+        message_use_cases.send_message(ex_caller, reciever.id, "Hello!")
+    assert exc_info.value.status_code == 403
+
+
+def test_send_message_empty_input(message_use_cases):
+    user_db = message_use_cases.user_db
+
+    user_db.findOne.return_value = ex_user
+    with pytest.raises(HTTPException) as exc_info:
+        message_use_cases.send_message(ex_caller, "rec1234")
     assert exc_info.value.status_code == 400
 
 
-def test_send_message_text():
-    message_use_cases = MessageUseCases(
-        MockAuthDB(),
-        MockMessageDB(),
-        MockMessageQueue(),
-        MockUserDB(),
-        MockContactsDB(),
-    )
-    caller = User(
-        _id="caller123",
-        username="caller",
-        age=25,
-        email="example@email.com",
-        online_status=True,
-        location=(0, 0),
-        active_mtr=0.5,
-        kinky_mtr=0.5,
-        vibes=["confident"],
-    )
-    message_use_cases.send_message(caller, "rec1234", "Hello!")
+def test_send_message_text(message_use_cases):
+    queue = message_use_cases.message_queue
+    contacts_db = message_use_cases.contacts_db
+    user_db = message_use_cases.user_db
+
+    user_db.findOne.return_value = ex_user
+    message_use_cases.send_message(ex_caller, "rec1234", "Hello!")
+
+    queue.announce.assert_called_once()
+    contacts_db.update.assert_called_once()
 
 
-def test_send_message_photo():
-    message_use_cases = MessageUseCases(
-        MockAuthDB(),
-        MockMessageDB(),
-        MockMessageQueue(),
-        MockUserDB(),
-        MockContactsDB(),
-    )
-    caller = User(
-        _id="caller123",
-        username="caller",
-        age=25,
-        email="example@email.com",
-        online_status=True,
-        location=(0, 0),
-        active_mtr=0.5,
-        kinky_mtr=0.5,
-        vibes=["confident"],
-    )
-    message_use_cases.send_message(caller, "rec1234", photo_id="photo123")
+def test_send_message_photo(message_use_cases):
+    queue = message_use_cases.message_queue
+    contacts_db = message_use_cases.contacts_db
+    user_db = message_use_cases.user_db
+
+    user_db.findOne.return_value = ex_user
+    message_use_cases.send_message(ex_caller, "rec1234", photo_id="Hello!")
+
+    queue.announce.assert_called_once()
+    contacts_db.update.assert_called_once()

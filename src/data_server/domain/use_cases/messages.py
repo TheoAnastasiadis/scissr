@@ -1,6 +1,5 @@
-from src.common.models.user import User
 from src.common.queues.message import MessageQueue
-from src.data_server.domain.services.auth import AuthDB
+from src.data_server.domain.services.auth.auth_serivce import APICaller
 from src.data_server.domain.services.db.contacts import ContactsDB
 from src.data_server.domain.services.db.message import MessageDB
 from src.data_server.domain.services.db.user import UserDB
@@ -10,7 +9,6 @@ from fastapi import HTTPException
 
 class MessageUseCases:
 
-    auth_db: AuthDB
     messages_db: MessageDB
     message_queue: MessageQueue
     user_db: UserDB
@@ -18,13 +16,11 @@ class MessageUseCases:
 
     def __init__(
         self,
-        auth_db: AuthDB,
         messages_db: MessageDB,
         message_queue: MessageQueue,
         user_db: UserDB,
         contacts_db: ContactsDB,
     ):
-        self.auth_db = auth_db
         self.messages_db = messages_db
         self.message_queue = message_queue
         self.user_db = user_db
@@ -33,14 +29,13 @@ class MessageUseCases:
     @validate_call
     def get_messages(
         self,
-        caller: User,
+        caller: APICaller,
         parties: tuple[str, str],
         skip: int = 0,
         limit: int = 20,
     ):
-        is_admin = self.auth_db.user_is_admin(caller.id)
 
-        if not is_admin and caller.id not in parties:
+        if caller.data_id not in parties:
             raise HTTPException(
                 status_code=403, detail="You cannot access this resource"
             )
@@ -50,14 +45,13 @@ class MessageUseCases:
     @validate_call
     def send_message(
         self,
-        caller: User,
+        caller: APICaller,
         reciever_id: str,
         text: str = None,
         photo_id: str = None,
     ):
-        # admin cannot do this
         reciever = self.user_db.findOne(reciever_id)
-        if reciever.id in caller.blocked or caller.id in reciever.blocked:
+        if caller.data_id in reciever.blocked:
             raise HTTPException(
                 status_code=403, detail="You cannot perform this action"
             )
@@ -66,7 +60,7 @@ class MessageUseCases:
             raise HTTPException(status_code=400, detail="Invalid Input")
 
         message = self.messages_db.insert(
-            caller.id, reciever_id, text, photo_id
+            caller.data_id, reciever_id, text, photo_id
         )
-        self.contacts_db.update([caller.id, reciever_id], text or "photo")
-        self.message_queue.announce(caller.id, reciever_id, message)
+        self.contacts_db.update([caller.data_id, reciever_id], text or "photo")
+        self.message_queue.announce(caller.data_id, reciever_id, message)
