@@ -1,7 +1,6 @@
 from bson import ObjectId
 from src.common.models.photo import Photo
-from src.common.models.user import User
-from src.data_server.domain.services.auth import AuthDB
+from src.data_server.domain.services.auth.auth_serivce import APICaller
 from src.data_server.domain.services.db.message import MessageDB
 from src.data_server.domain.services.db.user import UserDB
 from src.data_server.domain.services.storage.storage import Storage
@@ -11,19 +10,16 @@ from pydantic import validate_call
 
 class PhotoUseCases:
 
-    auth_db: AuthDB
     storage_service: Storage
     user_db: UserDB
     message_db: MessageDB
 
     def __init__(
         self,
-        auth_db: AuthDB,
         user_db: UserDB,
         message_db: MessageDB,
         storage_service: Storage,
     ):
-        self.auth_db = auth_db
         self.storage_service = storage_service
         self.user_db = user_db
         self.message_db = message_db
@@ -31,36 +27,32 @@ class PhotoUseCases:
     @validate_call
     def upload_photo(
         self,
-        caller: User,
-        user_id: str,
+        caller: APICaller,
         photo_id: str,
         file: bytes,
         public: bool = False,
     ) -> Photo:
-        is_admin = self.auth_db.user_is_admin(caller.id)
-
-        if not is_admin and caller.id != user_id:
-            raise HTTPException(
-                status_code=403, detail="You cannot perform this action"
-            )
 
         # business.validate_upload(user_id)
         photo_id = str(ObjectId())
-        url = self.storage_service.upload(file, user_id, photo_id, public)
+        url = self.storage_service.upload(
+            file, caller.data_id, photo_id, public
+        )
         # business.assess_upload(url)
         if not public:
-            url = f"/:private:/{user_id}/{photo_id}"
+            url = f"/:private:/{caller.data_id}/{photo_id}"
 
-        user = self.user_db.findOne(user_id)
+        user = self.user_db.findOne(caller.data_id)
         user.photos.append(Photo(_id=photo_id, url=url, public=public))
         self.user_db.update(user)
 
     @validate_call
-    def download_message_photo(self, caller: User, message_id: str) -> bytes:
-        is_admin = self.auth_db.user_is_admin(caller.id)
+    def download_message_photo(
+        self, caller: APICaller, message_id: str
+    ) -> bytes:
 
         message = self.message_db.findOne(message_id)
-        if not is_admin and caller.id not in [
+        if caller.data_id not in [
             message.sender,
             message.reciever,
         ]:
@@ -76,12 +68,6 @@ class PhotoUseCases:
         return self.storage_service.download(message.sender, message.photo_id)
 
     @validate_call
-    def delete_photo(self, caller: User, user_id: str, photo_id: str):
-        is_admin = self.auth_db.user_is_admin(caller.id)
+    def delete_photo(self, caller: APICaller, photo_id: str):
 
-        if not is_admin and caller.id != user_id:
-            raise HTTPException(
-                status_code=403, detail="You cannot perform this action"
-            )
-
-        self.storage_service.delete(user_id, photo_id)
+        self.storage_service.delete(caller.data_id, photo_id)
