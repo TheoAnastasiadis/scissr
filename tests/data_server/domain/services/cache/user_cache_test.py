@@ -19,5 +19,5 @@ def test_cache_get_not_implemented():
 def test_cache_set_not_implemented():
     cache = UserCache()
     with pytest.raises(NotImplementedError) as exc_info:
-        cache.cache_set({}, "")
+        cache.cache_set({}, [], "")
     assert str(exc_info.value) == "UserCache.set()"
