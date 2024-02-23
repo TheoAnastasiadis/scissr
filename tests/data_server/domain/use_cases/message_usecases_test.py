@@ -9,9 +9,9 @@ from src.data_server.domain.use_cases.messages import MessageUseCases
 import pytest
 from fastapi import HTTPException
 
-ex_caller = APICaller(data_id="id", email="", roles=[])
+ex_caller = APICaller(sub="id", email="", p_username="example")
 ex_user = User(
-    _id="example",
+    _id="id",
     username="example",
     age=30,
     email="example@email.com",
@@ -41,7 +41,7 @@ def test_get_messages(message_use_cases):
     message_db = message_use_cases.messages_db
 
     # test authorized
-    message_use_cases.get_messages(ex_caller, (ex_caller.data_id, "other_id"))
+    message_use_cases.get_messages(ex_caller, (ex_caller.sub, "other_id"))
     message_db.findMany.assert_called_once()
 
 
@@ -78,7 +78,7 @@ def test_send_message_blocked(message_use_cases):
         active_mtr=0.5,
         kinky_mtr=0.5,
         vibes=["confident"],
-        blocked=[ex_caller.data_id],
+        blocked=[ex_caller.sub],
     )
 
     user_db.findOne.return_value = reciever

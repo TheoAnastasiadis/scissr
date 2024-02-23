@@ -36,7 +36,7 @@ class MessagesRouter:
             to: str, limit: int = 20, skip: int = 0, caller=Depends(get_caller)
         ) -> list[Message]:
             return self.message_use_cases.get_messages(
-                caller, [caller.data_id, to], skip, limit
+                caller, [caller.sub, to], skip, limit
             )
 
         @router.post("/messages/{to}")

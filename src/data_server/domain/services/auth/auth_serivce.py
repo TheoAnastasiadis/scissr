@@ -1,11 +1,10 @@
-from typing import Union
 from pydantic import BaseModel
 
 
 class APICaller(BaseModel):
-    data_id: Union[str, None]
+    sub: str
     email: str
-    roles: list[str]
+    p_username: str
 
 
 class AuthService:

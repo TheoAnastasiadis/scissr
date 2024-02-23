@@ -15,7 +15,7 @@ from src.data_server.domain.use_cases.user import (
 from fastapi import HTTPException
 
 ex_caller = APICaller(
-    data_id="123", email="example@example.com", roles=["user"]
+    sub="123", email="example@example.com", p_username="example"
 )
 
 ex_user = User(
@@ -85,7 +85,7 @@ def test_get_user(user_usecases):
     user_db.findOne.return_value = User(
         **ex_user.model_dump(exclude=["blocked"]),
         _id="user_who_blocked",
-        blocked=[ex_caller.data_id],
+        blocked=[ex_caller.sub],
     )
     with pytest.raises(HTTPException) as exc_info:
         user_usecases.get_user(ex_caller, "user_who_blocked")
@@ -154,7 +154,7 @@ def test_get_users(user_usecases):
         kinky_mtr=searchFilters.kinky_mtr["value"],
         kinky_mtr_op=searchFilters.kinky_mtr["operation"],
         exclude_from_results=[],
-        excluded_from=ex_caller.data_id,
+        excluded_from=ex_caller.sub,
         only_acitve=searchFilters.only_active,
         vibes=searchFilters.vibes,
     )

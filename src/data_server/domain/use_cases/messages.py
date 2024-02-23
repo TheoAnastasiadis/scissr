@@ -35,7 +35,7 @@ class MessageUseCases:
         limit: int = 20,
     ):
 
-        if caller.data_id not in parties:
+        if caller.sub not in parties:
             raise HTTPException(
                 status_code=403, detail="You cannot access this resource"
             )
@@ -51,7 +51,7 @@ class MessageUseCases:
         photo_id: str = None,
     ):
         reciever = self.user_db.findOne(reciever_id)
-        if caller.data_id in reciever.blocked:
+        if caller.sub in reciever.blocked:
             raise HTTPException(
                 status_code=403, detail="You cannot perform this action"
             )
@@ -60,7 +60,7 @@ class MessageUseCases:
             raise HTTPException(status_code=400, detail="Invalid Input")
 
         message = self.messages_db.insert(
-            caller.data_id, reciever_id, text, photo_id
+            caller.sub, reciever_id, text, photo_id
         )
-        self.contacts_db.update([caller.data_id, reciever_id], text or "photo")
-        self.message_queue.announce(caller.data_id, reciever_id, message)
+        self.contacts_db.update([caller.sub, reciever_id], text or "photo")
+        self.message_queue.announce(caller.sub, reciever_id, message)

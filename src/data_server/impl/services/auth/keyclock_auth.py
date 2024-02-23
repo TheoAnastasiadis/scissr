@@ -69,23 +69,8 @@ class KeyCloackAuth(AuthService):
     def get_caller(self, token: str = Security(_oauth2_scheme)) -> APICaller:
         self.token = token
         payload = self._get_payload()
-        if "data_id" in payload:
-            return APICaller(
-                data_id=payload.get("data_id"),
-                roles=payload.get("roles"),
-                email=payload.get("email"),
-            )
-        else:
-            data_user = self.user_db.findOne(by_email=payload.get("email"))
-            # check if data_id has been already associated with user
-            auth_user_id = payload.get("sub")
-            auth_user = self.admin.get_user(auth_user_id)
-
-            if "data_id" not in auth_user:
-                self.admin.update_user(auth_user_id, {"data_id": data_user.id})
-
-            return APICaller(
-                data_id=data_user.id,
-                roles=payload.get("roles"),
-                email=payload.get("email"),
-            )
+        return APICaller(
+            sub=payload.get("sub"),
+            email=payload.get("email"),
+            p_username=payload.get("preferred_username"),
+        )

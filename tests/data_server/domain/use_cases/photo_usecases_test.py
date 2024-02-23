@@ -23,7 +23,9 @@ ex_user = User(
     kinky_mtr=0.5,
     location=(0, 0),
 )
-ex_caller = APICaller(data_id=sender_id, email=ex_user.email, roles=[])
+ex_caller = APICaller(
+    sub=sender_id, email=ex_user.email, p_username=ex_user.username
+)
 
 
 class MockUserDB(UserDB):
@@ -94,7 +96,7 @@ def test_download_message_photo_reciever(photo_use_cases):
 
     message_db.findOne.return_value = MockMessageDB().findOne("message123")
     other_caller = APICaller(
-        data_id=reciever_id, email="user2@example.com", roles=[]
+        sub=reciever_id, email="user2@example.com", p_username="example2"
     )
     photo_use_cases.download_message_photo(other_caller, "message123")
 

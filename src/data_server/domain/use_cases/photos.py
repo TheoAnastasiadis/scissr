@@ -35,14 +35,12 @@ class PhotoUseCases:
 
         # business.validate_upload(user_id)
         photo_id = str(ObjectId())
-        url = self.storage_service.upload(
-            file, caller.data_id, photo_id, public
-        )
+        url = self.storage_service.upload(file, caller.sub, photo_id, public)
         # business.assess_upload(url)
         if not public:
-            url = f"/:private:/{caller.data_id}/{photo_id}"
+            url = f"/:private:/{caller.sub}/{photo_id}"
 
-        user = self.user_db.findOne(caller.data_id)
+        user = self.user_db.findOne(caller.sub)
         user.photos.append(Photo(_id=photo_id, url=url, public=public))
         self.user_db.update(user)
 
@@ -52,7 +50,7 @@ class PhotoUseCases:
     ) -> bytes:
 
         message = self.message_db.findOne(message_id)
-        if caller.data_id not in [
+        if caller.sub not in [
             message.sender,
             message.reciever,
         ]:
@@ -70,4 +68,4 @@ class PhotoUseCases:
     @validate_call
     def delete_photo(self, caller: APICaller, photo_id: str):
 
-        self.storage_service.delete(caller.data_id, photo_id)
+        self.storage_service.delete(caller.sub, photo_id)
