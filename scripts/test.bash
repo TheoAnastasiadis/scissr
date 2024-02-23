@@ -1,1 +1,1 @@
-python -m pytest --cov=src --cov-report html  tests
+python3 -m pytest --cov=src --cov-report html  tests
