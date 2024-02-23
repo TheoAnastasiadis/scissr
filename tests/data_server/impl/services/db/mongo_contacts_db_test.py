@@ -1,5 +1,4 @@
 from datetime import datetime
-from bson import ObjectId
 import pytest
 from src.common.config import config
 from src.common.models.contact import Contact
@@ -16,7 +15,7 @@ def mongo_contacts_db() -> MongoContactsDB:
 
 
 def test_update_adds_or_updates_contact(mongo_contacts_db):
-    parties = (str(ObjectId()), str(ObjectId()))
+    parties = (str("user_1"), str("user_2"))
     last_message = "Test message"
 
     result = mongo_contacts_db.update(parties, last_message)
@@ -27,7 +26,7 @@ def test_update_adds_or_updates_contact(mongo_contacts_db):
 
 
 def test_findMany_returns_contacts(mongo_contacts_db):
-    parties = (str(ObjectId()), str(ObjectId()))
+    parties = (str("user_1"), str("user_2"))
     mongo_contacts_db.update(parties, "last message")
 
     result = mongo_contacts_db.findMany(parties[0], 0, 20)
@@ -38,7 +37,7 @@ def test_findMany_returns_contacts(mongo_contacts_db):
 
 
 def test_remove_deletes_contact(mongo_contacts_db):
-    pair = (str(ObjectId()), str(ObjectId()))
+    pair = (str("user_1"), str("user_2"))
     mongo_contacts_db.update(pair, "last message")
 
     mongo_contacts_db.remove(pair)

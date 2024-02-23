@@ -1,7 +1,6 @@
 from pymongo import MongoClient
 import pytest
 from datetime import datetime
-from bson import ObjectId
 from src.common.config import config
 from src.common.models.message import Message
 from src.data_server.impl.services.db.mongo_message_db import MongoMessageDB
@@ -16,8 +15,8 @@ def mongo_message_db() -> MongoMessageDB:
 
 
 def test_insert_with_text(mongo_message_db):
-    sender_id = ObjectId()
-    receiver_id = ObjectId()
+    sender_id = "user_1"
+    receiver_id = "user_2"
     text = "Test message"
     message = mongo_message_db.insert(sender_id, receiver_id, text)
 
@@ -28,9 +27,9 @@ def test_insert_with_text(mongo_message_db):
 
 
 def test_insert_with_photo_id(mongo_message_db):
-    sender_id = ObjectId()
-    receiver_id = ObjectId()
-    photo_id = ObjectId()
+    sender_id = "user_1"
+    receiver_id = "user_2"
+    photo_id = "photo_id"
     message = mongo_message_db.insert(sender_id, receiver_id, None, photo_id)
 
     assert message.sender == str(sender_id)
@@ -41,8 +40,8 @@ def test_insert_with_photo_id(mongo_message_db):
 
 def test_findOne_returns_message(mongo_message_db):
     message_data = {
-        "sender": str(ObjectId()),
-        "reciever": str(ObjectId()),
+        "sender": str("user_1"),
+        "reciever": str("user_2"),
         "text": "message text",
     }
 
@@ -60,14 +59,14 @@ def test_findOne_returns_message(mongo_message_db):
 
 def test_findOne_returns_none_when_not_found(mongo_message_db):
 
-    result = mongo_message_db.findOne(str(ObjectId()))
+    result = mongo_message_db.findOne(str("user_3"))
 
     assert not result
 
 
 def test_findMany_returns_messages(mongo_message_db):
-    sender_id = str(ObjectId())
-    reciever_id = str(ObjectId())
+    sender_id = str("user_1")
+    reciever_id = str("user_2")
     mongo_message_db.insert(sender_id, reciever_id, "random text 1")
     mongo_message_db.insert(reciever_id, sender_id, "random text 2")
 

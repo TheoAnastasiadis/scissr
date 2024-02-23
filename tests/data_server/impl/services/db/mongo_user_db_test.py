@@ -1,4 +1,3 @@
-from bson import ObjectId
 import pytest
 from pymongo import MongoClient
 from src.common.models.user import User
@@ -36,7 +35,7 @@ def test_findOne_existing_user(mongo_user_db):
 
 
 def test_findOne_nonexistent_user(mongo_user_db):
-    user = mongo_user_db.findOne(ObjectId())
+    user = mongo_user_db.findOne("nen_user")
     assert user is None
 
 
