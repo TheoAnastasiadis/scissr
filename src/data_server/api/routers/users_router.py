@@ -6,6 +6,9 @@ from data_server.domain.services.db.user import UserDB
 from data_server.domain.use_cases.user import UserUseCases
 from src.data_server.domain.services.auth.auth_serivce import AuthService
 from src.data_server.domain.services.cache.user_cache import UserCache
+from src.data_server.domain.use_cases.models.onboard_body import (
+    OnboardUserBody,
+)
 from src.data_server.domain.use_cases.models.search_filters import (
     SearchFilters,
 )
@@ -38,9 +41,9 @@ class UserRouter:
         async def profile(caller=Depends(get_caller)):
             return self.user_use_cases.profile(caller)
 
-        @router.post("/profile/complete")
-        async def complete_profile(
-            body: UpdateUserBody,
+        @router.post("/profile/onboard")
+        async def onboard(
+            body: OnboardUserBody,
             caller=Depends(get_caller),
         ):
             return self.user_use_cases.complete_profile(caller, body)

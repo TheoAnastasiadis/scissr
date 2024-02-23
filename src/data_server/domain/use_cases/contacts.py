@@ -16,4 +16,4 @@ class ContactUseCases:
         self, caller: APICaller, skip: int = 0, limit: int = 20
     ) -> list[Contact]:
 
-        return self.contacts_db.findMany(caller.data_id, skip, limit)
+        return self.contacts_db.findMany(caller.sub, skip, limit)

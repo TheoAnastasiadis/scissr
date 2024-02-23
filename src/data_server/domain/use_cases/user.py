@@ -1,9 +1,11 @@
-from bson import ObjectId
 from src.common.models.user import User
 from src.data_server.domain.services.auth.auth_serivce import APICaller
 from src.data_server.domain.services.cache.user_cache import UserCache
 from src.data_server.domain.services.db.contacts import ContactsDB
 from src.data_server.domain.services.db.user import UserDB
+from src.data_server.domain.use_cases.models.onboard_body import (
+    OnboardUserBody,
+)
 from src.data_server.domain.use_cases.models.search_filters import (
     SearchFilters,
 )
@@ -31,19 +33,28 @@ class UserUseCases:
 
     @validate_call
     def profile(self, caller: APICaller) -> User:
-        user = self.user_db.findOne(caller.data_id)
+        user = self.user_db.findOne(caller.sub)
         if user is None:
             raise HTTPException(
-                status_code=307, detail="User has not completed their profiles"
+                status_code=307, detail="User has not completed their profile"
             )
         else:
             return user
 
     @validate_call
-    def complete_profile(self, caller: APICaller, body: UpdateUserBody):
+    def complete_profile(self, caller: APICaller, body: OnboardUserBody):
+        user_exists = self.user_db.findOne(by_email=caller.email)
+        if user_exists:
+            raise HTTPException(
+                status_code=500,
+                detail="User has already completed their profile",
+            )
+
         user = User(
-            _id=ObjectId(),
-            username=body.username,
+            _id=caller.sub,
+            username=caller.p_username[
+                :10
+            ],  # limit username to fit user db schema
             email=caller.email,
             pronouns=body.pronouns,
             age=body.age,
@@ -57,7 +68,7 @@ class UserUseCases:
     def get_user(self, caller: APICaller, user_id: str) -> User:
         user = self.user_db.findOne(user_id)
 
-        if user is not None and caller.data_id in user.blocked:
+        if user is not None and caller.sub in user.blocked:
             raise HTTPException(
                 status_code=403, detail="You cannot view this resource."
             )
@@ -67,7 +78,7 @@ class UserUseCases:
                 detail=f"User with id: {user_id} not found on database",
             )
 
-        if caller.data_id != user_id:
+        if caller.sub != user_id:
             user.blocked = []
             user.location = None
             user.email = None
@@ -78,7 +89,7 @@ class UserUseCases:
     @validate_call
     def update_user(self, caller: APICaller, body: UpdateUserBody) -> User:
 
-        user = self.user_db.findOne(caller.data_id)
+        user = self.user_db.findOne(caller.sub)
         print(body)
 
         if body.username:
@@ -107,15 +118,15 @@ class UserUseCases:
 
     @validate_call
     def block_user(self, caller: APICaller, user_id: str):
-        user = self.user_db.findOne(caller.data_id)
+        user = self.user_db.findOne(caller.sub)
         if user is not None:
             user.blocked.append(user_id)
-            self.contacts_db.remove(pair=[caller.data_id, user_id])
+            self.contacts_db.remove(pair=[caller.sub, user_id])
             self.user_db.update(user)
 
     @validate_call
     def unblock_user(self, caller: APICaller, user_id: str):
-        user = self.user_db.findOne(caller.data_id)
+        user = self.user_db.findOne(caller.sub)
         user.blocked.remove(user_id)
         self.user_db.update(caller)
 
@@ -132,7 +143,7 @@ class UserUseCases:
         location_hash = ""
 
         users = []
-        user = self.user_db.findOne(caller.data_id)
+        user = self.user_db.findOne(caller.sub)
         # check if results are already in cache
         # (only when filters.only_active == False)
         if (
