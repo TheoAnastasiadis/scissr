@@ -36,3 +36,4 @@ htmlcov
 # environment
 .env
 .vscode
+.conda
