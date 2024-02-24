@@ -1,3 +1,4 @@
+from bson import ObjectId
 from src.common.models.user import User
 from src.data_server.domain.services.auth.auth_serivce import APICaller
 from src.data_server.domain.services.cache.user_cache import UserCache
@@ -5,6 +6,9 @@ from src.data_server.domain.services.db.contacts import ContactsDB
 from src.data_server.domain.services.db.user import UserDB
 from src.data_server.domain.use_cases.models.onboard_body import (
     OnboardUserBody,
+)
+from src.data_server.domain.use_cases.models.public_user_body import (
+    PublicUserBody,
 )
 from src.data_server.domain.use_cases.models.search_filters import (
     SearchFilters,
@@ -51,7 +55,8 @@ class UserUseCases:
             )
 
         user = User(
-            _id=caller.sub,
+            id=str(ObjectId()),  # new id
+            uuid=caller.sub,
             username=caller.p_username[
                 :10
             ],  # limit username to fit user db schema
@@ -65,7 +70,9 @@ class UserUseCases:
         self.user_db.insert(user)
 
     @validate_call
-    def get_user(self, caller: APICaller, user_id: str) -> User:
+    def get_user(
+        self, caller: APICaller, user_id: str
+    ) -> User | PublicUserBody:
         user = self.user_db.findOne(user_id)
 
         if user is not None and caller.sub in user.blocked:
@@ -79,18 +86,14 @@ class UserUseCases:
             )
 
         if caller.sub != user_id:
-            user.blocked = []
-            user.location = None
-            user.email = None
-            user.photos = [photo for photo in user.photos if photo.public]
-
-        return user
+            return PublicUserBody(**user.model_dump())
+        else:
+            return user
 
     @validate_call
-    def update_user(self, caller: APICaller, body: UpdateUserBody) -> User:
+    def update_user(self, caller: APICaller, body: UpdateUserBody):
 
         user = self.user_db.findOne(caller.sub)
-        print(body)
 
         if body.username:
             # business.validate_username(user, body.username)
@@ -121,14 +124,14 @@ class UserUseCases:
         user = self.user_db.findOne(caller.sub)
         if user is not None:
             user.blocked.append(user_id)
-            self.contacts_db.remove(pair=[caller.sub, user_id])
+            self.contacts_db.remove(pair=(caller.sub, user_id))
             self.user_db.update(user)
 
     @validate_call
     def unblock_user(self, caller: APICaller, user_id: str):
         user = self.user_db.findOne(caller.sub)
         user.blocked.remove(user_id)
-        self.user_db.update(caller)
+        self.user_db.update(user)
 
     @validate_call
     def get_users(
@@ -137,9 +140,9 @@ class UserUseCases:
         filters: SearchFilters,
         skip: int = 0,
         limit: int = 20,
-    ) -> list[User]:
+    ) -> list[PublicUserBody]:
 
-        filters_dict = filters.model_dump(exclude=["location", "distance"])
+        filters_dict = filters.model_dump(exclude={"location", "distance"})
         location_hash = ""
 
         users = []
@@ -159,23 +162,18 @@ class UserUseCases:
                 limit,
                 location=filters.location,
                 distance=filters.distance,
-                active_mtr=filters.active_mtr["value"],
-                active_mtr_op=filters.active_mtr["operation"],
-                kinky_mtr=filters.kinky_mtr["value"],
-                kinky_mtr_op=filters.kinky_mtr["operation"],
+                active_mtr=filters.active_mtr,
+                kinky_mtr=filters.kinky_mtr,
                 exclude_from_results=user.blocked,
-                excluded_from=user.id,
-                only_acitve=filters.only_active,
-                vibes=filters.vibes,
+                excluded_from=user.uuid,
+                only_active=filters.only_active or False,
+                vibes=filters.vibes or [],
             )
             self.user_cache.cache_set(filters_dict, users, location_hash)
 
-        def delete_uneccesary(u: User):
-            u.blocked = []
-            u.location = None
-            u.email = None
+        def delete_private_photos(u: User):
             u.photos = [photo for photo in u.photos if photo.public]
 
-        map(delete_uneccesary, users)
+        map(delete_private_photos, users)
 
-        return users
+        return [PublicUserBody(**user.model_dump()) for user in users]
