@@ -9,22 +9,10 @@ class GoogleCloudStorage(Storage):
     _public_bucket_name = config["PUBLIC_GCP_BUCKET"]
     _private_bucket_name = config["PRIVATE_GCP_BUCKET"]
 
-    def __init__(self, client: storage.Client, test: bool = False):
+    def __init__(self, client: storage.Client):
         self.client = client
-        if test:
-            self.test = test
-            self._public_bucket_name = "test_public"
-            self._private_bucket_name = "test_private"
         self.public_bucket = self.client.bucket(self._public_bucket_name)
         self.private_bucket = self.client.bucket(self._private_bucket_name)
-
-    def empty_bucket_for_testing(self):
-        if not self.test:
-            raise EnvironmentError(
-                "empty bucket called for non-testing environment"
-            )
-        self.public_bucket.delete(force=True)
-        self.private_bucket.delete(force=True)
 
     def upload(
         self, file: bytes, user_id: str, photo_id: str, public: bool = False
@@ -34,7 +22,7 @@ class GoogleCloudStorage(Storage):
             blob = self.public_bucket.blob(blob_name)
             blob.upload_from_string(file)
             blob.make_public()
-            return blob.public_url()
+            return blob.public_url
         else:
             blob = self.private_bucket.blob(blob_name)
             blob.upload_from_string(file)
