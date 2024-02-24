@@ -21,7 +21,7 @@ user_router = UserRouter(
     implementations.contacts_db,
     implementations.auth_service,
 )
-app.include_router(user_router.router)
+app.include_router(user_router.create_router())
 
 photos_router = PhotosRouter(
     implementations.auth_service,
@@ -29,7 +29,7 @@ photos_router = PhotosRouter(
     implementations.message_db,
     implementations.storage,
 )
-app.include_router(photos_router.router)
+app.include_router(photos_router.create_router())
 
 messages_router = MessagesRouter(
     implementations.auth_service,
@@ -38,9 +38,9 @@ messages_router = MessagesRouter(
     implementations.user_db,
     implementations.contacts_db,
 )
-app.include_router(messages_router.router)
+app.include_router(messages_router.create_router())
 
 contacts_router = ContactsRouter(
     implementations.contacts_db, implementations.auth_service
 )
-app.include_router(contacts_router)
+app.include_router(contacts_router.create_router())
