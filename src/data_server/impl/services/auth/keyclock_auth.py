@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Security
 from fastapi.security import OAuth2AuthorizationCodeBearer
-from keycloak import KeycloakAdmin, KeycloakOpenID
+from keycloak import KeycloakOpenID
 from src.common.config import config
 from src.data_server.domain.services.auth.auth_serivce import (
     APICaller,
@@ -26,22 +26,16 @@ class KeyCloackAuth(AuthService):
     #     realm_name=config["AUTH_REALM"],
     # )
 
-    token: str = None
-    caller: APICaller = None
-
-    def __init__(
-        self, user_db: UserDB, client: KeycloakOpenID, admin: KeycloakAdmin
-    ):
+    def __init__(self, user_db: UserDB, client: KeycloakOpenID):
         self.user_db = user_db
         self.client = client
-        self.admin = admin
 
     _oauth2_scheme = OAuth2AuthorizationCodeBearer(
-        authorizationUrl=config["AUTH_URL"],
-        tokenUrl=config["TOKEN_URL"],
+        authorizationUrl=config["AUTH_URL"],  # type: ignore
+        tokenUrl=config["TOKEN_URL"],  # type: ignore
     )
 
-    def _get_payload(self) -> dict:
+    def _get_payload(self, token: str) -> dict[str, str]:
 
         public_key = (
             "-----BEGIN PUBLIC KEY-----\n"
@@ -51,7 +45,7 @@ class KeyCloackAuth(AuthService):
 
         try:
             return self.client.decode_token(
-                self.token,
+                token,
                 key=public_key,
                 options={
                     "verify_signature": True,
@@ -67,10 +61,9 @@ class KeyCloackAuth(AuthService):
             )
 
     def get_caller(self, token: str = Security(_oauth2_scheme)) -> APICaller:
-        self.token = token
-        payload = self._get_payload()
+        payload = self._get_payload(token)
         return APICaller(
-            sub=payload.get("sub"),
-            email=payload.get("email"),
-            p_username=payload.get("preferred_username"),
+            sub=payload.get("sub"),  # type: ignore
+            email=payload.get("email"),  # type: ignore
+            p_username=payload.get("preferred_username"),  # type: ignore
         )

@@ -25,13 +25,15 @@ class MongoUserDB(UserDB):
             raise ValueError("Cannot empty database if not testing")
         self.collection.delete_many({})
 
-    def findOne(self, by_id: str = None, by_email: str = None) -> User:
+    def findOne(
+        self, by_id: str | None = None, by_email: str | None = None
+    ) -> User | None:
         if not by_id and not by_email:
             raise TypeError(
                 "at least one of `by_id` or `by_email` args must be provided"
             )
         user = (
-            self.collection.find_one(ObjectId(by_id))
+            self.collection.find_one({"uuid": by_id})
             if by_id
             else self.collection.find_one({"email": by_email})
         )
@@ -92,8 +94,8 @@ class MongoUserDB(UserDB):
     def delete(self, id: str):
         self.collection.delete_one({"_id": ObjectId(id)})
 
-    def update(self, user: User, location: tuple[float, float] = None):
-        update_data = {"$set": user.model_dump(exclude=["id"])}
+    def update(self, user: User, location: tuple[float, float] | None = None):
+        update_data = {"$set": user.model_dump(exclude={"id"})}
         if location:
             update_data["$set"]["location"] = location
         return User(

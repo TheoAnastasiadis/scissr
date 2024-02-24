@@ -26,19 +26,22 @@ class MongoContactsDB(ContactsDB):
             raise ValueError("Cannot empty database if not testing")
         self.collection.delete_many({})
 
-    def update(self, parties: tuple[str, str], last_message: str) -> Contact:
-        pair = list(map(lambda p: ObjectId(p), list(parties)))
+    def update(
+        self, parties_uuids: tuple[str, str], last_message: str
+    ) -> Contact:
         result = self.collection.find_one_and_update(
             {
                 "parties": {
-                    "$all": [{"$elemMatch": {"$eq": elem}} for elem in pair]
+                    "$all": [
+                        {"$elemMatch": {"$eq": elem}} for elem in parties_uuids
+                    ]
                 }
             },
             {
                 "$set": {
                     "last_message": last_message,
                     "time_stamp": datetime.now(),
-                    "parties": pair,
+                    "parties": parties_uuids,
                 }
             },
             upsert=True,
@@ -46,8 +49,8 @@ class MongoContactsDB(ContactsDB):
         )
         return Contact(**result)
 
-    def findMany(self, user_id: str, skip: int, limit: int) -> list[Contact]:
-        query = {"parties": {"$in": [ObjectId(user_id)]}}
+    def findMany(self, user_uuid: str, skip: int, limit: int) -> list[Contact]:
+        query = {"parties": {"$in": [user_uuid]}}
         contacts = (
             self.collection.find(query)
             .sort("time_stamp")
@@ -56,6 +59,5 @@ class MongoContactsDB(ContactsDB):
         )
         return [Contact(**contact) for contact in contacts]
 
-    def remove(self, pair: tuple[str, str]):
-        pair = list(map(lambda p: ObjectId(p), list(pair)))
-        self.collection.delete_many({"parties": {"$all": pair}})
+    def remove(self, pair_uuids: tuple[str, str]):
+        self.collection.delete_many({"parties": {"$all": pair_uuids}})

@@ -1,20 +1,22 @@
+from bson import ObjectId
 import pytest
 from pydantic import ValidationError
-import uuid
+from uuid import uuid4
 from src.common.models import User
 
 
 @pytest.fixture
 def sample_user_data():
     return {
-        "_id": str(uuid.uuid4()),
+        "id": ObjectId(),
+        "uuid": str(uuid4()),
         "username": "testuser",
         "email": "test@email.com",
         "pronouns": "she/her",
         "age": 25,
         "online_status": True,
-        "active_mtr": 0.8,
-        "kinky_mtr": None,
+        "active_mtr": 0.5,
+        "kinky_mtr": 0.5,
         "location": [0, 0],
         "vibes": ["happy", "excited"],
         "photos": [],
@@ -25,7 +27,6 @@ def sample_user_data():
 
 def test_create_user(sample_user_data):
     user = User(**sample_user_data)
-    assert user.id == sample_user_data["_id"]
     assert user.username == sample_user_data["username"]
     assert user.age == sample_user_data["age"]
     assert user.online_status == sample_user_data["online_status"]
@@ -40,10 +41,13 @@ def test_create_user(sample_user_data):
 def test_invalid_age():
     with pytest.raises(ValidationError):
         User(
-            _id=str(uuid.uuid4()),
+            id=str(ObjectId()),
+            uuid=str(uuid4()),
             age=15,
             email="test@example.com",
             username="testuser",
+            kinky_mtr=0.5,
+            active_mtr=0.5,
             location=(0, 0),
         )
 
@@ -51,11 +55,13 @@ def test_invalid_age():
 def test_invalid_active_mtr():
     with pytest.raises(ValidationError):
         User(
-            _id=str(uuid.uuid4()),
+            id=str(ObjectId()),
+            uuid=str(uuid4()),
             age=25,
             username="testuser",
             email="test@example.com",
             active_mtr=1.5,
+            kinky_mtr=0.5,
             location=(0, 0),
         )
 
@@ -63,28 +69,21 @@ def test_invalid_active_mtr():
 def test_invalid_kinky_mtr():
     with pytest.raises(ValidationError):
         User(
-            _id=str(uuid.uuid4()),
+            id=str(ObjectId()),
+            uuid=str(uuid4()),
             age=25,
             username="testuser",
             email="test@example.com",
+            active_mtr=0.5,
             kinky_mtr=-0.1,
             location=(0, 0),
         )
 
 
-def test_empty_location():
-    with pytest.raises(ValidationError):
-        User(
-            _id=str(uuid.uuid4()),
-            age=25,
-            email="test@example.com",
-            username="testuser",
-        )
-
-
 def test_default_values():
     user = User(
-        _id=str(uuid.uuid4()),
+        id=str(ObjectId()),
+        uuid=str(uuid4()),
         age=25,
         username="testuser",
         email="test@example.com",

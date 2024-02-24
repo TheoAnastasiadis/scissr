@@ -1,10 +1,16 @@
+from uuid import uuid4
+from bson import ObjectId
 import pytest
 from unittest.mock import MagicMock
 from src.common.models import User
+from src.common.models.user import PronounsEnum
 from src.data_server.domain.services.auth.auth_serivce import APICaller
 from src.data_server.domain.services.cache.user_cache import UserCache
 from src.data_server.domain.services.db import UserDB, ContactsDB
 from src.data_server.domain.use_cases.models.location import LocationTuple
+from src.data_server.domain.use_cases.models.onboard_body import (
+    OnboardUserBody,
+)
 from src.data_server.domain.use_cases.models.search_filters import (
     SearchFilters,
 )
@@ -15,14 +21,15 @@ from src.data_server.domain.use_cases.user import (
 from fastapi import HTTPException
 
 ex_caller = APICaller(
-    sub="123", email="example@example.com", p_username="example"
+    sub=str(uuid4()), email="example@example.com", p_username="example"
 )
 
 ex_user = User(
-    _id="123",
+    id=str(ObjectId()),
+    uuid=ex_caller.sub,
     email="example@example.com",
     username="example",
-    pronouns="she/her",
+    pronouns=PronounsEnum.SHE,
     age=35,
     active_mtr=0.5,
     kinky_mtr=0.5,
@@ -51,13 +58,13 @@ def test_profile(user_usecases):
 
 def test_complete_profile(user_usecases):
     user_db = user_usecases.user_db
-    body = UpdateUserBody(
-        username="newusrnm",
+    user_db.findOne.return_value = None
+    body = OnboardUserBody(
         age=36,
-        pronouns="she/her",
+        pronouns=PronounsEnum.SHE,
         kinky_mtr=0.5,
         active_mtr=0.5,
-        location=(0, 0),
+        location=LocationTuple(latitude=0, longitude=0),
     )
     user_usecases.complete_profile(ex_caller, body)
     user_db.insert.assert_called_once()
@@ -68,8 +75,10 @@ def test_get_user(user_usecases):
     user_db.findOne.return_value = ex_user
 
     # Test successful get user
-    assert user_usecases.get_user(ex_caller, ex_user.id) == ex_user
-    user_db.findOne.assert_called_once_with(ex_user.id)
+    result = user_usecases.get_user(ex_caller, ex_user.uuid)
+    assert result.uuid == ex_user.uuid
+    assert result.location
+    user_db.findOne.assert_called_once_with(ex_user.uuid)
 
     # Test user not found
     user_db.findOne.return_value = None
@@ -83,8 +92,8 @@ def test_get_user(user_usecases):
 
     # Test user blocked caller
     user_db.findOne.return_value = User(
-        **ex_user.model_dump(exclude=["blocked"]),
-        _id="user_who_blocked",
+        **ex_user.model_dump(exclude={"blocked", "id"}),
+        id="user_who_blocked",
         blocked=[ex_caller.sub],
     )
     with pytest.raises(HTTPException) as exc_info:
@@ -103,8 +112,13 @@ def test_update_user(user_usecases):
     )
 
     user_usecases.update_user(ex_caller, update_body)
-    updated_user = User(**ex_user.model_dump(), _id=ex_user.id)
-    updated_user.username = update_body.username
+    updated_user = User(
+        **{
+            **ex_user.model_dump(exclude={"id", "username"}),
+            "_id": ex_user.id,
+            "username": update_body.username,
+        }
+    )
     user_db.update.assert_called_once_with(updated_user)
 
 
@@ -138,6 +152,7 @@ def test_get_users(user_usecases):
         active_mtr={"value": 0.7, "operation": "LE"},
         only_active=True,
         location=LocationTuple(123.456, 789.012),
+        distance=5,
     )
 
     # Test successful get users
@@ -148,13 +163,11 @@ def test_get_users(user_usecases):
         0,
         20,
         location=searchFilters.location,
-        distance=5,
-        active_mtr=searchFilters.active_mtr["value"],
-        active_mtr_op=searchFilters.active_mtr["operation"],
-        kinky_mtr=searchFilters.kinky_mtr["value"],
-        kinky_mtr_op=searchFilters.kinky_mtr["operation"],
+        distance=5.0,
+        active_mtr=searchFilters.active_mtr,
+        kinky_mtr=searchFilters.kinky_mtr,
         exclude_from_results=[],
         excluded_from=ex_caller.sub,
-        only_acitve=searchFilters.only_active,
+        only_active=searchFilters.only_active,
         vibes=searchFilters.vibes,
     )

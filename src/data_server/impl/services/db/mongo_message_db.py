@@ -26,14 +26,14 @@ class MongoMessageDB(MessageDB):
 
     def insert(
         self,
-        sender_id: str,
-        reciever_id: str,
+        sender_uuid: str,
+        reciever_uuid: str,
         text: str | None,
         photo_id: str | None = None,
     ) -> Message:
         message_data = {
-            "sender": ObjectId(sender_id),
-            "reciever": ObjectId(reciever_id),
+            "sender": sender_uuid,
+            "reciever": reciever_uuid,
             "time_stamp": datetime.now(),
         }
         if text:
@@ -45,7 +45,7 @@ class MongoMessageDB(MessageDB):
         message_data["_id"] = str(inserted_id)
         return Message(**message_data)
 
-    def findOne(self, id: str) -> Message:
+    def findOne(self, id: str) -> Message | None:
         result = self.collection.find_one(ObjectId(id))
         if result:
             return Message(**result)
@@ -54,7 +54,7 @@ class MongoMessageDB(MessageDB):
 
     def findMany(
         self,
-        parties: tuple[str, str],
+        parties_uuids: tuple[str, str],
         skip=0,
         limit=20,
     ) -> list[Message]:
@@ -62,12 +62,12 @@ class MongoMessageDB(MessageDB):
         query = {
             "$or": [
                 {
-                    "reciever": ObjectId(parties[0]),
-                    "sender": ObjectId(parties[1]),
+                    "reciever": parties_uuids[0],
+                    "sender": parties_uuids[1],
                 },
                 {
-                    "reciever": ObjectId(parties[1]),
-                    "sender": ObjectId(parties[0]),
+                    "reciever": parties_uuids[1],
+                    "sender": parties_uuids[0],
                 },
             ]
         }

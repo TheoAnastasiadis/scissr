@@ -13,8 +13,8 @@ class Operations(str, Enum):
 class SearchFilters(BaseModel):
 
     class Kinky_mtr_type(NamedTuple):
-        value: Annotated[float, Field(ge=0, le=1, default=0.0)]
-        opretation: Annotated[Operations, Field(default=Operations.GE)]
+        value: Annotated[float, Field(ge=0, le=1)] = 0
+        opretation: Operations = Operations.GE
 
     class Active_mtr_type(NamedTuple):
         value: Annotated[float, Field(ge=0, le=1, default=0.0)]
@@ -22,10 +22,12 @@ class SearchFilters(BaseModel):
 
     vibes: Annotated[Optional[list[str]], Field(kw_only=True)]
     kinky_mtr: Annotated[
-        Optional[dict], Field(default_factory=Kinky_mtr_type, kw_only=True)
+        Optional[dict],
+        Field(default_factory=lambda: str(Kinky_mtr_type()), kw_only=True),
     ]
     active_mtr: Annotated[
-        Optional[dict], Field(default_factory=Active_mtr_type, kw_only=True)
+        Optional[dict],
+        Field(default_factory=lambda: str(Active_mtr_type()), kw_only=True),
     ]
     only_active: Annotated[Optional[bool], Field(default=False, kw_only=True)]
     location: Annotated[

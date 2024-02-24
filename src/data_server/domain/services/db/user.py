@@ -2,7 +2,9 @@ from src.common.models.user import User
 
 
 class UserDB:
-    def findOne(self, by_id: str = None, by_email: str = None) -> User:
+    def findOne(
+        self, by_uuid: str | None = None, by_email: str | None = None
+    ) -> User:
         raise NotImplementedError("UserDB.findOne()")
 
     def findMany(
@@ -10,11 +12,11 @@ class UserDB:
         skip: int,
         limit: int,
         location: tuple[float, float],
-        distance: int,
-        active_mtr: dict,
-        kinky_mtr: dict,
+        distance: float,
+        active_mtr: dict | None,
+        kinky_mtr: dict | None,
         exclude_from_results: list[str],
-        excluded_from: list[str],
+        excluded_from: str,
         only_active: bool,
         vibes: list[str],
     ) -> list[User]:
