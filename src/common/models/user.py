@@ -1,22 +1,14 @@
 from enum import Enum
-from typing import Optional
-from typing_extensions import Annotated
-from datetime import datetime
+from typing import Annotated
+from uuid import uuid4
+from bson import ObjectId
 from .photo import Photo
-from pydantic import BaseModel, Field, BeforeValidator, EmailStr
-
-
-class Contact(BaseModel):
-    id: Annotated[str, Field(alias="_id")]
-    last_contacted: Annotated[datetime, Field(default_factory=datetime)]
-
-    class ConfigDict:
-        json_schema_extra = {
-            "example": {
-                "id": "066de609-b04a-4b30-b46c-32537c7f1f6e",
-                "last_contacted": datetime(1998, 6, 23),
-            }
-        }
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    EmailStr,
+    Field,
+)
 
 
 class PronounsEnum(str, Enum):
@@ -25,24 +17,34 @@ class PronounsEnum(str, Enum):
 
 
 class User(BaseModel):
-    id: Annotated[str, Field(alias="_id"), BeforeValidator(str)]
-    username: Annotated[str, Field(max_length=10)]
-    email: EmailStr
-    pronouns: Annotated[PronounsEnum, Field(default=PronounsEnum.SHE)]
-    age: Annotated[int, Field(ge=18, le=100)]
-    online_status: Annotated[bool, Field(default_factory=lambda: False)]
-    active_mtr: Annotated[Optional[float], Field(ge=0, le=1)]
-    kinky_mtr: Annotated[Optional[float], Field(ge=0, le=1)]
-    location: Annotated[tuple[float, float], Field()]
-    vibes: Annotated[list[str], Field(default_factory=lambda: [])]
-    photos: Annotated[list[Photo], Field(default_factory=lambda: [])]
-    blocked: Annotated[list[str], Field(default_factory=lambda: [])]
+    # id from data db
+    id: Annotated[
+        str,
+        Field(
+            default_factory=lambda: str(ObjectId()), kw_only=True, alias="_id"
+        ),
+        BeforeValidator(str),
+    ]
+    # id from auth db
+    uuid: str = Field(default_factory=lambda: str(uuid4()), kw_only=True)
+    username: str = Field(max_length=10, kw_only=True)
+    email: EmailStr = Field(kw_only=True)
+    pronouns: PronounsEnum = Field(default=PronounsEnum.SHE, kw_only=True)
+    age: int = Field(ge=18, le=100, kw_only=True)
+    online_status: bool = Field(default=False, kw_only=True)
+    active_mtr: float = Field(ge=0, le=1, kw_only=True)
+    kinky_mtr: float = Field(ge=0, le=1, kw_only=True)
+    location: tuple[float, float] = Field(kw_only=True)
+    vibes: list[str] = Field(default=[], kw_only=True)
+    photos: list[Photo] = Field(default=[], kw_only=True)
+    blocked: list[str] = Field(default=[], kw_only=True)
 
     class ConfigDict:
         populate_by_name = True
         json_schema_extra = {
             "example": {
-                "_id": "066de609-b04a-4b30-b46c-32537c7f1f6e",
+                "_id": "ObjectId(65d9f3463c86b32b1a821c1a)",
+                "uuid": "066de609-b04a-4b30-b46c-32537c7f1f6e",
                 "username": "don_quixot",
                 "email": "email@example.com",
                 "pronouns": "she/her",

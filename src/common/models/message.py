@@ -15,16 +15,14 @@ class Message(BaseModel):
         Field(alias="_id", kw_only=True),
         AfterValidator(str),
         BeforeValidator(str),
-    ]
-    sender: Annotated[str, Field(kw_only=True), BeforeValidator(str)]
-    reciever: Annotated[str, Field(kw_only=True), BeforeValidator(str)]
+    ]  # this comes from data db as bson ObjectId and needs to be converted
+    sender: str = Field(kw_only=True)
+    reciever: str = Field(kw_only=True)
     text: Optional[str] = None
     photo_id: Annotated[
-        Optional[str], Field(kw_only=True, default=None), BeforeValidator(str)
-    ]
-    time_stamp: Annotated[
-        datetime, Field(kw_only=True, default_factory=datetime)
-    ]
+        Optional[str], Field(kw_only=True), BeforeValidator(str)
+    ] = None  # this comes from data db as bson ObjectId and needs to be converted
+    time_stamp: datetime = Field(kw_only=True, default_factory=datetime.now)
 
     @model_validator(mode="before")
     @classmethod
