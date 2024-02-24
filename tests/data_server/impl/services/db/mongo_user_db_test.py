@@ -1,3 +1,4 @@
+from uuid import uuid4
 import pytest
 from pymongo import MongoClient
 from src.common.models.user import User
@@ -17,25 +18,24 @@ def test_findOne_existing_user(mongo_user_db):
     # Insert test data
     user_data = {
         "username": "test_user",
+        "uuid": str(uuid4()),
         "location": (0, 0),
         "age": 35,
         "email": "email@example.com",
         "kinky_mtr": 0.5,
         "active_mtr": 0.5,
     }
-    inserted_id = str(
-        mongo_user_db.collection.insert_one(user_data).inserted_id
-    )
+    mongo_user_db.collection.insert_one(user_data)
 
     # Test findOne method
-    user = mongo_user_db.findOne(inserted_id)
+    user = mongo_user_db.findOne(user_data["uuid"])
     assert isinstance(user, User)
     assert user.username == "test_user"
-    assert str(user.id) == inserted_id
+    assert user.uuid == user_data["uuid"]
 
 
 def test_findOne_nonexistent_user(mongo_user_db):
-    user = mongo_user_db.findOne("nen_user")
+    user = mongo_user_db.findOne(str(uuid4()))
     assert user is None
 
 
@@ -364,6 +364,7 @@ def test_update(mongo_user_db):
     # create test data
     user_data = {
         "username": "test_user",
+        "uuid": str(uuid4()),
         "kinky_mtr": 0.5,
         "active_mtr": 0.5,
         "location": (0, 0),
@@ -371,8 +372,8 @@ def test_update(mongo_user_db):
         "email": "email@example.com",
     }
     # Create a new user object to update
-    inserted_id = mongo_user_db.collection.insert_one(user_data).inserted_id
-    user = mongo_user_db.findOne(str(inserted_id))
+    mongo_user_db.collection.insert_one(user_data).inserted_id
+    user = mongo_user_db.findOne(user_data["uuid"])
 
     user.username = "upd_user"
     updated_user = mongo_user_db.update(user)

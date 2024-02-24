@@ -1,3 +1,4 @@
+from bson import ObjectId
 from pymongo import MongoClient
 import pytest
 from datetime import datetime
@@ -29,7 +30,7 @@ def test_insert_with_text(mongo_message_db):
 def test_insert_with_photo_id(mongo_message_db):
     sender_id = "user_1"
     receiver_id = "user_2"
-    photo_id = "photo_id"
+    photo_id = f"{ObjectId()}"
     message = mongo_message_db.insert(sender_id, receiver_id, None, photo_id)
 
     assert message.sender == str(sender_id)
@@ -59,7 +60,7 @@ def test_findOne_returns_message(mongo_message_db):
 
 def test_findOne_returns_none_when_not_found(mongo_message_db):
 
-    result = mongo_message_db.findOne(str("user_3"))
+    result = mongo_message_db.findOne(f"{ObjectId()}")
 
     assert not result
 
