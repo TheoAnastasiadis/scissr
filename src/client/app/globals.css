@@ -16,11 +16,6 @@
   }
 }
 
-body {
-  color: white;
-  background: #021002;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;

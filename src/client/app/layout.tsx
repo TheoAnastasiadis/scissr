@@ -1,6 +1,10 @@
-/* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata } from "next";
 import "./globals.css";
+import { config } from "@fortawesome/fontawesome-svg-core";
+import "@fortawesome/fontawesome-svg-core/styles.css";
+config.autoAddCss = false;
+
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "SCISSR",
@@ -13,22 +17,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <style>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin={"anonymous"}
-          />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Flow+Circular&family=Protest+Guerrilla&family=Shadows+Into+Light&display=swap"
-            rel="stylesheet"
-          />
-        </style>
-      </head>
-      <body>{children}</body>
+    <html lang="en" className="dark">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
