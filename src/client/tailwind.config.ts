@@ -9,6 +9,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        protest: ["var(--font-protest)"],
+        metrophobic: ["var(--font-metrophobic)"],
+        inter: ["var(--font-inter-tight)"],
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
