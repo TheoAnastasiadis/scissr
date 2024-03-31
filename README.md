@@ -1,6 +1,13 @@
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/scissr?style=social)](https://github.com/yourusername/scissr)
-[![GitHub issues](https://img.shields.io/github/issues/yourusername/scissr)](https://github.com/yourusername/scissr/issues)
-[![GitHub license](https://img.shields.io/github/license/yourusername/scissr)](https://github.com/yourusername/scissr/blob/master/LICENSE)
+<div align="center">
+  
+![Status](https://img.shields.io/badge/status-WIP-f39f37)
+
+</div>
+<div align="center">
+  
+![Scissr Logo](https://raw.githubusercontent.com/TheoAnastasiadis/scissr/master/src/client/public/scissr_logo.png)
+
+</div>
 
 # SCISSR (pronounced Seeshr) - Connecting Kindred Spirits
 
@@ -22,6 +29,8 @@ Scissr is a cutting-edge dating and hookup platform designed to foster meaningfu
 - **Comprehensive Profiles:** Create detailed profiles, showcasing your interests, hobbies, and personality, ensuring accurate and meaningful matches.
 - **Photo Uploads:** Express yourself by uploading multiple photos to your profile, allowing others to get a better understanding of who you are.
 - **Matchmaking Algorithms:** Our advanced algorithms analyze user preferences and compatibility to suggest highly relevant potential matches.
+
+![SCISSR Interface WIP](https://raw.githubusercontent.com/TheoAnastasiadis/scissr/master/src/client/public/ss_1.png)
 
 ## Technologies
 
@@ -55,3 +64,6 @@ For any inquiries, feedback, or collaboration opportunities, please feel free to
 - Phone: +30 6946605411 (UTC+2, Athens, Greece)
 
 Let's build an inclusive and empowering community together!
+
+![SCISSR Interface WIP](https://raw.githubusercontent.com/TheoAnastasiadis/scissr/master/src/client/public/ss_3.png)
+
