@@ -9,11 +9,13 @@ import {
   Navbar,
   NavbarContent,
   NavbarItem,
+  Input,
 } from "@nextui-org/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretUp } from "@fortawesome/free-solid-svg-icons/faCaretUp";
 import {
   faCircleInfo,
+  faImage,
   faLocation,
   faPaperPlane,
   faUserFriends,
@@ -141,7 +143,54 @@ function Chat() {
           </NavbarItem>
         </NavbarContent>
       </Navbar>
-      <div className="sticky top-10 min-h-[50vh] bg-green-400"></div>
+      <div className="relative h-[80vh] overflow-y-scroll">
+        <div className="absolute bottom-0 h-screen pb-24 p-3 flex flex-col-reverse">
+          <Card className="max-w-[75%] mt-2">
+            <CardBody className="pb-0">
+              <p>I just saw your pictures and I'm really impressed!</p>
+            </CardBody>
+            <CardFooter className="pt-0">
+              <span className="text-gray-600">just now</span>
+            </CardFooter>
+          </Card>
+          <Card className="max-w-[75%] mt-2">
+            <CardBody className="pb-0">
+              <p>Heyy cutie pie. I'm good wbu?</p>
+            </CardBody>
+            <CardFooter className="pt-0">
+              <span className="text-gray-600">a few seconds ago</span>
+            </CardFooter>
+          </Card>
+          <Card className="max-w-[75%] mt-2 self-end bg-green-900">
+            <CardBody className="pb-0">
+              <p>Hey beautifull, what's up!</p>
+            </CardBody>
+            <CardFooter className="pt-0 justify-end">
+              <span className="text-gray-400 text-end">a minute ago</span>
+            </CardFooter>
+          </Card>
+        </div>
+        <div className="absolute w-full bottom-0 flex flex-row justify-center items-center border-t border-slate-800 p-3 bg-black bg-opacity-85 backdrop-blur-lg">
+          <Button
+            isIconOnly
+            color="danger"
+            aria-label="Like"
+            className="mr-2.5"
+            size="lg"
+          >
+            <FontAwesomeIcon icon={faImage} />
+          </Button>
+          <Input type="text" label="write your message..." size="sm" />
+          <Button
+            color="success"
+            size="lg"
+            endContent={<FontAwesomeIcon icon={faPaperPlane} />}
+            className="ml-2.5"
+          >
+            Send
+          </Button>
+        </div>
+      </div>
     </>
   );
 }
@@ -150,11 +199,11 @@ export default function Grid() {
   return (
     <>
       <section className="flex flex-row">
-        <div className="w-3/12 p-5 border-r border-gray-800 h-screen overflow-y-scroll">
+        <div className="hidden md:block w-3/12 p-5 border-r border-gray-800 h-screen overflow-y-scroll">
           <h2 className="font-inter text-2xl mb-2">Contacts</h2>
           {Contacts()}
         </div>
-        <div className="p-5 h-screen overflow-y-scroll w-6/12">
+        <div className="p-5 h-screen overflow-y-scroll md:w-6/12">
           <h2 className="font-inter text-2xl">
             Grid View &nbsp;
             <span className="text-slate-400 text-sm">
@@ -164,7 +213,9 @@ export default function Grid() {
           </h2>
           {Radar()}
         </div>
-        <div className="w-3/12 border-l border-gray-800 h-screen">{Chat()}</div>
+        <div className="hidden md:block w-3/12 border-l border-gray-800 h-screen">
+          {Chat()}
+        </div>
       </section>
       <footer className="py-10 border-t border-slate-800">1234</footer>
     </>
