@@ -45,9 +45,9 @@ export function PlatformNavbar() {
       </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem>hello, user_name</NavbarItem>
-        <NavbarItem className="hidden py-3 lg:flex">
+        <NavbarItem className="py-3 flex">
           <div className="relative rounded-full w-12 h-12 bg-white bg-[url('https://images.pexels.com/photos/5845278/pexels-photo-5845278.jpeg')] bg-cover">
-            <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-sucess-700 border-2 border-black-500"></div>
+            <div className="absolute bottom-0 right-0 h-4 w-4 rounded-full  bg-green-500"></div>
           </div>
         </NavbarItem>
       </NavbarContent>
